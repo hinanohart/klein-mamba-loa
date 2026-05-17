@@ -2,10 +2,10 @@
   "schema_version": "0.1.0",
   "project": "klein-mamba-loa",
   "started_at": "2026-05-17",
-  "current_stage": "S0",
+  "current_stage": "S2_DONE_BLOCKED_ON_GPU",
   "stages": {
     "S0": {
-      "status": "IN_PROGRESS",
+      "status": "GREEN",
       "sub_tasks": {
         "S0-a": {
           "name": "naming 4-axis verify",
@@ -21,22 +21,23 @@
         },
         "S0-c": {
           "name": "VRAM measurement stub",
-          "status": "IN_PROGRESS",
-          "started_at": "2026-05-17",
-          "notes": "scripts/measure_vram.py stub created in this turn. Actual measurement requires GPU host; user-side execution gated."
+          "status": "GREEN_STRUCTURAL",
+          "verified_at": "2026-05-17",
+          "evidence": "scripts/measure_vram.py committed (981af1a). --dry-run executed on no-GPU host returns gate=DRY_RUN with target=19.0+-5.0GB. Real measurement (GREEN/YELLOW/RED) is a user-host action."
         }
       }
     },
-    "S1": {"status": "PENDING_ON_S0_GREEN", "notes": "Scaffold + license guard; only starts after S0 all-GREEN"},
-    "S2": {"status": "PENDING", "notes": "Core impl SPF Loss"},
-    "S3": {"status": "PENDING", "notes": "Integration toy 3-run loss curve"},
-    "S4": {"status": "PENDING", "notes": "Small-scale eval, ECE/orthogonality metrics"},
-    "S5": {"status": "PENDING", "notes": "Docs + release prep"}
+    "S1": {"status": "GREEN", "completed_at": "2026-05-17", "evidence": "git 981af1a: LICENSE Apache-2.0, pyproject.toml GREEN-only deps + YELLOW optional, NOTICE, README, SECURITY, THIRD_PARTY_NOTICES (GREEN/YELLOW/RED audit), erasure.py, persona_scheme.py, measure_vram.py"},
+    "S2": {"status": "GREEN_CORE", "completed_at": "2026-05-17", "evidence": "git HEAD: PGCDisentangledFMLoss (233 lines, <500 sub-R14 cap), orthogonality_penalty, make_persona_basis, RuntimeGate, mamba_transfusion_bridge stub, 20 unit tests passing on no-torch path"},
+    "S3": {"status": "USER_GATE_GPU_REQUIRED", "notes": "Integration toy 3-run loss curve needs Mamba-2 1.3B + FLUX.2 klein 4B FP8 on a GPU host. Blueprint section 7 user-intervention point."},
+    "S4": {"status": "USER_GATE_GPU_REQUIRED", "notes": "Eval against TIMETRAVEL branching ECE + orthogonality > 0.7; depends on S3."},
+    "S5": {"status": "PENDING", "notes": "Docs + release prep. CPU-runnable portion (MODEL_CARD draft, docs/ARCHITECTURE.md, docs/persona-rfc.md, CI yaml) is the next Claude-driven step."}
   },
-  "last_gate": "S0-a:GREEN, S0-b:GREEN, S0-c:IN_PROGRESS",
-  "next_action": "Finish S0-c stub commit. Run kluster batch verify on Phase 2 file batch. Then transition S0 -> S1 once S0-c stub committed (structural verification only; actual GPU measurement deferred to user host).",
-  "kluster_chat_id": null,
-  "git_sha": null,
+  "last_gate": "S0:GREEN, S1:GREEN, S2:GREEN_CORE, S3:USER_GATE_GPU",
+  "next_action": "S5 CPU-runnable subset (MODEL_CARD / ARCHITECTURE.md / persona-rfc.md / CI yaml / pre-commit config). After that, S3/S4 wait on user-provided GPU host. Release tag is a user-intervention point.",
+  "kluster_chat_id": "iblk7oedo1",
+  "git_sha_initial": "981af1a73edf355de7c8d798399e0e24b9185085",
+  "git_sha_latest": "0a26f1f6a6635c51c471e78cbde957e87d118596",
   "monitor_agents": {
     "monitor1": "static review of blueprint section 10 contract compliance (architect viewpoint)",
     "monitor2": "freeze + blueprint key-facts comprehension verification (verifier viewpoint)",
@@ -45,9 +46,9 @@
   "open_critic_remainders_from_blueprint_section_11": {
     "naming_4_axis_grep_verify": "CLOSED (S0-a)",
     "flux2_klein_4b_fp8_weight_path": "CLOSED (S0-b)",
-    "vram_actual_measurement": "OPEN (needs GPU host; stub created)",
-    "transfusion_pytorch_production_grade_fork_decision": "OPEN (S2 dependency)",
-    "spf_kml_naming_grep_verify_in_repos": "PARTIAL (web search done; gh repo search needs gh auth)"
+    "vram_actual_measurement": "STRUCTURAL_CLOSED, REAL_OPEN (stub committed; real measurement is user-host gate)",
+    "transfusion_pytorch_production_grade_fork_decision": "OPEN (S3 dependency; mamba_transfusion_bridge stub in place to localize the gap)",
+    "spf_kml_naming_grep_verify_in_repos": "PARTIAL (web search done; gh repo search remains; auth gate)"
   },
   "user_intervention_required": false,
   "user_intervention_triggers_to_watch": [
