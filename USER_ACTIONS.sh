@@ -9,15 +9,15 @@
 # come from your existing shell environment — this script never writes
 # them and never reads files that might contain them.
 #
-# Steps:
-#   1  github-repo-create    (one-time; needs `gh auth login` beforehand)
-#   2  hf-login              (one-time; needs your HuggingFace token in HF_TOKEN)
-#   3  install-tier1         (GPU host; pulls torch + flux + mamba)
-#   4  measure-vram          (GPU host; real S0-c measurement)
-#   5  toy-train-3run        (GPU host; S3 gate — 3-run loss curve)
-#   6  references-verify     (any host; flips docs/REFERENCES.md to verified)
-#   7  release-tag           (one-time; cuts v0.1.0 after S3 GREEN + REFERENCES verified)
-#   8  arxiv-submit          (one-time; user opens arXiv submission portal)
+# Steps (state as of 2026-05-18):
+#   [DONE] 1  github-repo-create  hinanohart/klein-mamba-loa published, master protected
+#   [TODO] 2  hf-login            one-time; needs your HuggingFace token in HF_TOKEN
+#   [TODO] 3  install-tier1       GPU host; pulls torch + flux + mamba
+#   [TODO] 4  measure-vram        GPU host; real S0-c measurement
+#   [TODO] 5  toy-train-3run      GPU host; S3 gate — 3-run loss curve
+#   [TODO] 6  references-verify   any host; human-eyeballs arXiv abstracts
+#   [TODO] 7  release-tag         one-time; cuts v0.1.0 after S3 GREEN + REFERENCES verified
+#   [TODO] 8  arxiv-submit        one-time; opens arXiv submission portal
 #
 # Authorization scope: this script touches your local git remote and your
 # HuggingFace cache. It does NOT push commits or weights anywhere on your
@@ -33,38 +33,41 @@ log() { printf '[USER_ACTIONS] %s\n' "$*" >&2; }
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { log "missing required command: $1"; exit 2; }; }
 
 # ---------------------------------------------------------------------------
-# Step 1 — create the GitHub repository (user-owned).
-# Requires `gh auth login` to have completed beforehand. The gh CLI reads
-# its token from ~/.config/gh/hosts.yml; this script never reads tokens.
+# Step 1 — DONE (2026-05-18). Kept idempotent: if you re-run, it confirms
+# the existing repo + branch protection state instead of recreating.
+#   Repo URL:           https://github.com/hinanohart/klein-mamba-loa
+#   Visibility/license: public / Apache-2.0
+#   Branch protection:  5 required status checks (strict), PR required,
+#                       no force-push, no deletion, conversation resolution.
 # ---------------------------------------------------------------------------
 step_github_repo_create() {
   need_cmd gh
   need_cmd git
   cd "$REPO_ROOT"
-  if [[ ! -d .git ]]; then
-    git init
-    git add -A
-    git commit -m "Initial commit (auto-OSS audit pass)" || true
-  fi
-  # Use whatever org/user is currently authenticated.
   local owner
   owner="$(gh api user --jq .login)"
   if gh repo view "$owner/$REPO_NAME" >/dev/null 2>&1; then
-    log "repo $owner/$REPO_NAME already exists; skipping create"
-  else
-    gh repo create "$owner/$REPO_NAME" --public --source=. --push --description \
-      "Stratified Persona Flow (SPF) — pre-alpha"
+    log "DONE: $owner/$REPO_NAME already exists (created 2026-05-18)."
+    log "      $(gh repo view "$owner/$REPO_NAME" --json url --jq .url)"
+    # Verify protection is still in place (regression alarm).
+    if gh api "repos/$owner/$REPO_NAME/branches/master/protection" >/dev/null 2>&1; then
+      log "DONE: branch protection on master is active."
+    else
+      log "WARN: branch protection on master is MISSING — re-applying is a manual step."
+    fi
+    return 0
   fi
-  # Patch placeholder-org → real owner across every doc that ships URLs.
+  log "Repo does not exist — creating now."
+  gh repo create "$owner/$REPO_NAME" --public --source=. --remote=origin --push \
+    --description "Stratified Persona Flow (SPF) — pre-alpha"
   for f in pyproject.toml docs/MODEL_CARD.md README.md docs/REFERENCES.md; do
     if [[ -f "$REPO_ROOT/$f" ]] && grep -q "placeholder-org" "$REPO_ROOT/$f"; then
       sed -i.bak "s|placeholder-org|$owner|g" "$REPO_ROOT/$f"
       rm -f "$REPO_ROOT/$f.bak"
     fi
   done
-  log "placeholders rewritten to $owner in pyproject.toml + docs. Commit and push:"
-  log "  git -C \"$REPO_ROOT\" add -A && git -C \"$REPO_ROOT\" commit -m 'chore: set repo URL'"
-  log "  git -C \"$REPO_ROOT\" push"
+  log "placeholders rewritten to $owner. Commit and push:"
+  log "  git -C \"$REPO_ROOT\" add -A && git -C \"$REPO_ROOT\" commit -m 'chore: set repo URL' && git -C \"$REPO_ROOT\" push"
 }
 
 # ---------------------------------------------------------------------------
@@ -165,16 +168,41 @@ step_arxiv_submit() {
 # ---------------------------------------------------------------------------
 print_plan() {
   cat <<'EOF'
-Remaining manual steps (run any of these via `bash USER_ACTIONS.sh <step>`):
+==============================================================================
+USER_ACTIONS.sh — state as of 2026-05-18
+==============================================================================
 
-  1  github-repo-create    one-time           prereq: gh auth login
-  2  hf-login              one-time           prereq: HF_TOKEN in env or interactive
-  3  install-tier1         GPU host           pulls torch + flux + mamba deps
-  4  measure-vram          GPU host           real S0-c gate (writes vram_report.json)
-  5  toy-train-3run        GPU host preferred S3 gate (writes toy_train_report.json)
-  6  references-verify     any host, human    flips REFERENCES.md to verified
-  7  release-tag           one-time           refuses if REFERENCES.md not verified
-  8  arxiv-submit          one-time, human    opens https://arxiv.org/submit
+[DONE — no action needed]
+  1  github-repo-create  hinanohart/klein-mamba-loa (public, Apache-2.0)
+                         master protected (5 required checks, PR required,
+                         no force-push, no deletion, conversation resolution)
+                         CI 2/2 GREEN on initial push
+                         URL: https://github.com/hinanohart/klein-mamba-loa
+
+[TODO — needs you, in order]
+
+  GPU host required (steps 2-5):
+    2  hf-login          HF_TOKEN env var or interactive
+                         `bash USER_ACTIONS.sh hf-login`
+    3  install-tier1     pip install -e ".[flow,mamba,flux,mcp,dev]"  (~800MB)
+                         `bash USER_ACTIONS.sh install-tier1`
+    4  measure-vram      real S0-c gate; writes vram_report.json
+                         `bash USER_ACTIONS.sh measure-vram`
+    5  toy-train-3run    S3 gate; writes toy_train_report.json
+                         `bash USER_ACTIONS.sh toy-train-3run`
+
+  CPU OK, but human eyeballs needed (steps 6-8):
+    6  references-verify open the 3 arXiv URLs in docs/REFERENCES.md, sha256
+                         the abstract HTML, edit the file, commit.
+                         (script prints instructions only — does not fetch)
+    7  release-tag       cuts v0.1.0 (refuses if REFERENCES.md not verified)
+                         `bash USER_ACTIONS.sh release-tag`
+    8  arxiv-submit      opens https://arxiv.org/submit in your browser
+                         `bash USER_ACTIONS.sh arxiv-submit`
+
+==============================================================================
+Run a single step:   bash USER_ACTIONS.sh <step-name-or-number>
+==============================================================================
 EOF
 }
 
