@@ -31,13 +31,14 @@
     "S2": {"status": "GREEN_CORE", "completed_at": "2026-05-17", "evidence": "git HEAD: PGCDisentangledFMLoss (233 lines, <500 sub-R14 cap), orthogonality_penalty, make_persona_basis, RuntimeGate, mamba_transfusion_bridge stub, 20 unit tests passing on no-torch path"},
     "S3": {"status": "USER_GATE_GPU_REQUIRED", "notes": "Integration toy 3-run loss curve needs Mamba-2 1.3B + FLUX.2 klein 4B FP8 on a GPU host. Blueprint section 7 user-intervention point."},
     "S4": {"status": "USER_GATE_GPU_REQUIRED", "notes": "Eval against TIMETRAVEL branching ECE + orthogonality > 0.7; depends on S3."},
-    "S5": {"status": "PENDING", "notes": "Docs + release prep. CPU-runnable portion (MODEL_CARD draft, docs/ARCHITECTURE.md, docs/persona-rfc.md, CI yaml) is the next Claude-driven step."}
+    "S5": {"status": "GREEN_CPU_PORTION", "completed_at": "2026-05-17", "evidence": "MODEL_CARD / ARCHITECTURE / persona-rfc / CONTRIBUTING / CHANGELOG / pre-commit / CI / license_guard committed. Release tag is user-intervention point."}
   },
-  "last_gate": "S0:GREEN, S1:GREEN, S2:GREEN_CORE, S3:USER_GATE_GPU",
-  "next_action": "S5 CPU-runnable subset (MODEL_CARD / ARCHITECTURE.md / persona-rfc.md / CI yaml / pre-commit config). After that, S3/S4 wait on user-provided GPU host. Release tag is a user-intervention point.",
+  "last_gate": "S0:GREEN, S1:GREEN, S2:GREEN_CORE, S3:USER_GATE_GPU, S4:USER_GATE_GPU, S5:GREEN_CPU_PORTION",
+  "next_action": "USER ACTIONS: (1) push repo to GitHub & gh repo create klein-mamba-loa (R11 token via env var only), (2) on a GPU host run `pip install -e .[flow,mamba,flux]` + `python scripts/measure_vram.py --tier 1` for real VRAM, (3) run S3 toy 3-run training, (4) S4 eval, (5) release tag. CLAUDE-SIDE remaining: none until S3 results land or new directives.",
   "kluster_chat_id": "iblk7oedo1",
   "git_sha_initial": "981af1a73edf355de7c8d798399e0e24b9185085",
-  "git_sha_latest": "0a26f1f6a6635c51c471e78cbde957e87d118596",
+  "git_sha_latest_code": "01e4914fa697bc137ff9d3ac7f25436a13e99cf8",
+  "git_sha_state_after_commit": "see-git-log-tip",
   "monitor_agents": {
     "monitor1": "static review of blueprint section 10 contract compliance (architect viewpoint)",
     "monitor2": "freeze + blueprint key-facts comprehension verification (verifier viewpoint)",
@@ -50,7 +51,8 @@
     "transfusion_pytorch_production_grade_fork_decision": "OPEN (S3 dependency; mamba_transfusion_bridge stub in place to localize the gap)",
     "spf_kml_naming_grep_verify_in_repos": "PARTIAL (web search done; gh repo search remains; auth gate)"
   },
-  "user_intervention_required": false,
+  "user_intervention_required": true,
+  "user_intervention_reason": "S3 GPU host needed; release tag; optional gh repo create + push",
   "user_intervention_triggers_to_watch": [
     "network egress for non-public assets",
     "license RED detection",

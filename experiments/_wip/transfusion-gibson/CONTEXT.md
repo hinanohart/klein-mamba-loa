@@ -94,13 +94,25 @@ Network egress / License RED / Release tag (`v*`) / arXiv 投稿 / 実在人物 
 - 実在人物 personality cloning ← 同意なし不可
 - deadbot ← 法整備未成熟、policy 層のみ
 
-## 次 turn action (auto resume 時の起点)
+## 進捗 (2026-05-17 本 session 完了時点)
 
-1. S0-c stub commit を確認
-2. Phase 2 file batch を kluster_code_review_auto で verify (初回 call なので chat_id なし)
-3. S0 → S1 transition、S1 scaffold 残作業 (THIRD_PARTY_NOTICES / SECURITY.md / MODEL_CARD draft / ethics gate stub) 続行
-4. S2 SPF Loss 実装着手 (`klein_mamba_loa/flow/loss/pgc_dfm.py`)、500 行制限内
-5. pipeline-state.json / CONTEXT.md 更新
+### Claude-driven GREEN (43 tracked file, 3 commits)
+
+- **S0**: 命名 4 軸 verify GREEN / Flux.2 klein 4B FP8 weight path GREEN / VRAM stub structural GREEN
+- **S1**: LICENSE / NOTICE / SECURITY / THIRD_PARTY_NOTICES (GREEN/YELLOW/RED audit) / pyproject.toml / .gitignore / README
+- **S2 core**: PGCDisentangledFMLoss (233 行 / 500 行 sub-R14 cap 内) / orthogonality_penalty / make_persona_basis / RuntimeGate / mamba_transfusion_bridge stub / 20 unit tests passing on no-torch path
+- **S5 CPU portion**: MODEL_CARD / ARCHITECTURE / persona-rfc (MCP 0.1.0-draft) / CONTRIBUTING / CHANGELOG / .pre-commit-config / .github/workflows/ci.yml / scripts/license_guard.py (23 deps scanned, 0 RED)
+
+git 履歴: `981af1a` initial → `0a26f1f` S2 core → `01e4914` S5 docs
+
+### User-gated (GPU host or external action 必要)
+
+- **S3 toy 3-run training**: GPU host で Mamba-2 1.3B + Flux.2 klein 4B FP8 load + SPF Loss 1k step、loss curve 3 run 平均下降、orthogonality >= 0.7
+- **S4 small-scale eval**: TIMETRAVEL branching ECE baseline 比較
+- **S3 着手 file**: `examples/toy_train.py` (本 session 未作成、user-driven session で書く想定)
+- **真の VRAM 測定**: `python scripts/measure_vram.py --tier 1` を GPU host で
+- **gh repo create / push**: HF token / GH token は R11 で env var 経由のみ
+- **release tag / arXiv 投稿**: blueprint § 7 user-intervention point
 
 ## 関連 memory link
 
