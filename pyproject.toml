@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "klein-mamba-loa"
 version = "0.0.1.dev0"
 description = "Stratified Persona Flow (SPF): disentangled velocity fields for multi-persona multimodal generation. Transfusion x Flow Matching x Mamba-2 x FLUX.2 klein stack."
-authors = []
+authors = [{name = "klein-mamba-loa maintainers"}]
 license = {text = "Apache-2.0"}
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,8 +29,10 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+# Core deps stay tiny and torch-free so CPU-only hosts can import the package
+# for S0 verification without pulling a ~800MB torch wheel. torch lives in the
+# [flow] extra and is required only at training/inference time.
 dependencies = [
-    "torch>=2.4",
     "einops>=0.7",
     "safetensors>=0.4",
     "huggingface-hub>=0.24",
@@ -39,14 +41,17 @@ dependencies = [
 
 [project.optional-dependencies]
 flow = [
+    "torch>=2.4",
     "torchcfm>=1.0",
     "transfusion-pytorch>=0.5",
 ]
 mamba = [
+    "torch>=2.4",
     "mamba-ssm>=2.0",
     "causal-conv1d>=1.4",
 ]
 flux = [
+    "torch>=2.4",
     "diffusers>=0.30",
     "transformers>=4.40",
     "accelerate>=0.30",
@@ -70,12 +75,15 @@ dev = [
     "pre-commit>=3.7",
 ]
 all = [
-    "klein-mamba-loa[flow,mamba,flux,memory,mcp,dev]",
+    "klein-mamba-loa[flow,mamba,flux,memory,mcp,serving,dev]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/REPLACE_ME/klein-mamba-loa"
-Repository = "https://github.com/REPLACE_ME/klein-mamba-loa"
+# These URLs are placeholders. Set the real repo location before publishing
+# (USER_ACTIONS.sh step "gh repo create" overwrites them).
+Homepage = "https://github.com/placeholder-org/klein-mamba-loa"
+Repository = "https://github.com/placeholder-org/klein-mamba-loa"
+Issues = "https://github.com/placeholder-org/klein-mamba-loa/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -97,3 +105,5 @@ addopts = "-ra -q"
 python_version = "3.10"
 strict_optional = true
 warn_unused_ignores = true
+# Test files and the experiments tree are out of scope for mypy.
+exclude = ["tests/", "experiments/", "build/"]

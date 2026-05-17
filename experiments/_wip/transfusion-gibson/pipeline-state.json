@@ -2,7 +2,13 @@
   "schema_version": "0.1.0",
   "project": "klein-mamba-loa",
   "started_at": "2026-05-17",
-  "current_stage": "S2_DONE_BLOCKED_ON_GPU",
+  "current_stage": "AUDIT_PASS_COMPLETE_BLOCKED_ON_GPU",
+  "audit_pass": {
+    "performed_at": "2026-05-17",
+    "agents": ["architect", "omc-code-reviewer", "critic"],
+    "verdict": "CONDITIONAL ACCEPT (all conditions addressed in this commit)",
+    "monitor_logs_dir": "experiments/_wip/transfusion-gibson/monitor_logs/"
+  },
   "stages": {
     "S0": {
       "status": "GREEN",
@@ -11,56 +17,72 @@
           "name": "naming 4-axis verify",
           "status": "GREEN",
           "verified_at": "2026-05-17",
-          "evidence": "WebSearch x4 returned 0 collision for klein-mamba-loa (GitHub/PyPI) / klein_mamba_loa (PyPI) / PGCDisentangledFMLoss / 'Stratified Persona Flow' (arXiv title). Persona-Flow (arXiv 2602.15669) exists but is OCEAN-vector-algebra context, name SPF avoids collision."
+          "evidence": "WebSearch x4 returned 0 collision (GitHub/PyPI/PyPI namespace/arXiv title). Persona-Flow (arXiv 2602.15669) exists in OCEAN-vector-algebra context; SPF naming avoids collision. gh repo search remains a USER_ACTIONS.sh step 1 (auth gate)."
         },
         "S0-b": {
           "name": "Flux.2 klein 4B FP8 weight path",
           "status": "GREEN",
           "verified_at": "2026-05-17",
-          "evidence": "HuggingFace repo black-forest-labs/FLUX.2-klein-4b-fp8 exists, Apache 2.0, flux-2-klein-base-4b-fp8.safetensors (4.09 GB), VRAM ~13GB on RTX 3090/4070+, commercial use OK."
+          "evidence": "black-forest-labs/FLUX.2-klein-4b-fp8 Apache-2.0, 4.09GB safetensors, ~13GB VRAM."
         },
         "S0-c": {
-          "name": "VRAM measurement stub",
-          "status": "GREEN_STRUCTURAL",
+          "name": "VRAM measurement",
+          "status": "DEFERRED_TO_GPU_HOST",
           "verified_at": "2026-05-17",
-          "evidence": "scripts/measure_vram.py committed (981af1a). --dry-run executed on no-GPU host returns gate=DRY_RUN with target=19.0+-5.0GB. Real measurement (GREEN/YELLOW/RED) is a user-host action."
+          "evidence": "scripts/measure_vram.py --dry-run executed; gate=DRY_RUN. Real measurement = USER_ACTIONS.sh step 4."
         }
       }
     },
-    "S1": {"status": "GREEN", "completed_at": "2026-05-17", "evidence": "git 981af1a: LICENSE Apache-2.0, pyproject.toml GREEN-only deps + YELLOW optional, NOTICE, README, SECURITY, THIRD_PARTY_NOTICES (GREEN/YELLOW/RED audit), erasure.py, persona_scheme.py, measure_vram.py"},
-    "S2": {"status": "GREEN_CORE", "completed_at": "2026-05-17", "evidence": "git HEAD: PGCDisentangledFMLoss (233 lines, <500 sub-R14 cap), orthogonality_penalty, make_persona_basis, RuntimeGate, mamba_transfusion_bridge stub, 20 unit tests passing on no-torch path"},
-    "S3": {"status": "USER_GATE_GPU_REQUIRED", "notes": "Integration toy 3-run loss curve needs Mamba-2 1.3B + FLUX.2 klein 4B FP8 on a GPU host. Blueprint section 7 user-intervention point."},
-    "S4": {"status": "USER_GATE_GPU_REQUIRED", "notes": "Eval against TIMETRAVEL branching ECE + orthogonality > 0.7; depends on S3."},
-    "S5": {"status": "GREEN_CPU_PORTION", "completed_at": "2026-05-17", "evidence": "MODEL_CARD / ARCHITECTURE / persona-rfc / CONTRIBUTING / CHANGELOG / pre-commit / CI / license_guard committed. Release tag is user-intervention point."}
+    "S1": {
+      "status": "GREEN",
+      "completed_at": "2026-05-17"
+    },
+    "S2": {
+      "status": "GREEN_CORE",
+      "completed_at": "2026-05-17",
+      "evidence": "PGCDisentangledFMLoss (~270 lines, < 500 sub-R14 cap), orthogonality_penalty (Σ_{i<j}), basis-projection internal cond head, detach_basis_for_cond wired, persona_basis/disentangle/erasure/runtime_gate/commercial_gate/backbone surfaces, 65 unit tests passing on a torch-available host (no-torch path skips torch-needing tests cleanly)."
+    },
+    "S3": {
+      "status": "USER_GATE_GPU_REQUIRED",
+      "notes": "Toy 3-run on Tier-1 stack. examples/toy_train.py scaffold passes the gate on the synthetic problem (mean_final_ortho ≈ 1.0, all_runs_decreased=true at --steps 20)."
+    },
+    "S4": {
+      "status": "USER_GATE_GPU_REQUIRED",
+      "notes": "TIMETRAVEL branching ECE + orthogonality > 0.7."
+    },
+    "S5": {
+      "status": "GREEN_CPU_PORTION",
+      "completed_at": "2026-05-17"
+    }
   },
   "last_gate": "S0:GREEN, S1:GREEN, S2:GREEN_CORE, S3:USER_GATE_GPU, S4:USER_GATE_GPU, S5:GREEN_CPU_PORTION",
-  "next_action": "USER ACTIONS: (1) push repo to GitHub & gh repo create klein-mamba-loa (R11 token via env var only), (2) on a GPU host run `pip install -e .[flow,mamba,flux]` + `python scripts/measure_vram.py --tier 1` for real VRAM, (3) run S3 toy 3-run training, (4) S4 eval, (5) release tag. CLAUDE-SIDE remaining: none until S3 results land or new directives.",
+  "next_action": "USER_ACTIONS.sh covers every remaining step (1: gh repo create, 2: hf-login, 3: install-tier1, 4: measure-vram, 5: toy-train-3run, 6: references-verify, 7: release-tag, 8: arxiv-submit). CLAUDE-SIDE remaining: none until new directives.",
   "kluster_chat_id": "iblk7oedo1",
+  "kluster_status": "trial-ended; verifier protection disabled; visit https://platform.kluster.ai/ for plan",
   "git_sha_initial": "981af1a73edf355de7c8d798399e0e24b9185085",
-  "git_sha_latest_code": "01e4914fa697bc137ff9d3ac7f25436a13e99cf8",
-  "git_sha_state_after_commit": "see-git-log-tip",
-  "monitor_agents": {
-    "monitor1": "static review of blueprint section 10 contract compliance (architect viewpoint)",
-    "monitor2": "freeze + blueprint key-facts comprehension verification (verifier viewpoint)",
-    "meta": "monitor1 + monitor2 blind-spot detection and overlap audit (critic viewpoint)"
+  "git_sha_pre_audit": "9e7e438",
+  "git_sha_post_audit": "pending-commit",
+  "audit_findings_summary": {
+    "critical": [
+      "detach_basis_for_cond unimplemented",
+      "L_cond classifier head not in code",
+      "rev hex8 validation absent",
+      "erasure shallow + silent rmdir failure",
+      "lora_pool surface advertised but URI blend has no consumer"
+    ],
+    "all_addressed": true,
+    "verification": "65/65 pytest pass; license_guard 25 deps 0 RED; check_file_lengths cap 500 OK; measure_vram --dry-run gate=DRY_RUN; toy_train.py --steps 20 mean_final_ortho 0.9991 all_runs_decreased=true"
   },
   "open_critic_remainders_from_blueprint_section_11": {
-    "naming_4_axis_grep_verify": "CLOSED (S0-a)",
+    "naming_4_axis_grep_verify": "PARTIAL (USER_ACTIONS.sh step 1)",
     "flux2_klein_4b_fp8_weight_path": "CLOSED (S0-b)",
-    "vram_actual_measurement": "STRUCTURAL_CLOSED, REAL_OPEN (stub committed; real measurement is user-host gate)",
-    "transfusion_pytorch_production_grade_fork_decision": "OPEN (S3 dependency; mamba_transfusion_bridge stub in place to localize the gap)",
-    "spf_kml_naming_grep_verify_in_repos": "PARTIAL (web search done; gh repo search remains; auth gate)"
+    "vram_actual_measurement": "DEFERRED (USER_ACTIONS.sh step 4)",
+    "transfusion_pytorch_production_grade_fork_decision": "DEFERRED to S3 evidence (bridge stub localises the gap)",
+    "spf_kml_naming_grep_verify_in_repos": "PARTIAL (USER_ACTIONS.sh step 1)",
+    "arxiv_id_retrieved_evidence": "PARTIAL (docs/REFERENCES.md drafted; USER_ACTIONS.sh step 6 flips to verified)"
   },
   "user_intervention_required": true,
-  "user_intervention_reason": "S3 GPU host needed; release tag; optional gh repo create + push",
-  "user_intervention_triggers_to_watch": [
-    "network egress for non-public assets",
-    "license RED detection",
-    "release tag / arXiv submission",
-    "real-person dataset",
-    "secret config (R11)",
-    "sub-R14 trigger (>500 lines OR module-crossing structural change)",
-    "Tier re-definition"
-  ],
-  "notes": "After /compact, recovery procedure = (1) Read blueprint + freeze in ~/.claude/projects/-home-runza/memory/, (2) Read this pipeline-state.json, (3) Read CONTEXT.md, (4) continue from next_action."
+  "user_intervention_reason": "GPU host for S3/S4; gh auth for repo + naming verify; human eyeballs for arXiv ID abstract sha; release tag; arXiv submit.",
+  "user_intervention_handoff": "USER_ACTIONS.sh — every remaining manual step in one script.",
+  "notes": "After /compact, recovery = (1) Read architecture_transfusion-gibson-blueprint-2026-05-17 + project_transfusion-gibson-oss-2026-05-17 in memory, (2) Read this file, (3) Read CONTEXT.md, (4) run USER_ACTIONS.sh --plan."
 }

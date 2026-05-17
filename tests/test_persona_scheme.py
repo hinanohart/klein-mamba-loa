@@ -49,6 +49,34 @@ def test_parse_uri_rejects_out_of_range_blend():
         parse_uri("persona://x?blend=1.5")
 
 
+def test_parse_uri_rejects_invalid_rev_format():
+    # rev must be 8-hex; "ZZZZZZZZ" is non-hex; "deadbee" is 7 chars.
+    with pytest.raises(PersonaURIError):
+        parse_uri("persona://x?rev=ZZZZZZZZ")
+    with pytest.raises(PersonaURIError):
+        parse_uri("persona://x?rev=deadbee")
+    with pytest.raises(PersonaURIError):
+        parse_uri("persona://x?rev=deadbeefcafe")
+
+
+def test_parse_uri_rejects_path_after_authority():
+    # `persona://x/y` would silently drop `/y` — reject explicitly.
+    with pytest.raises(PersonaURIError):
+        parse_uri("persona://x/y")
+
+
+def test_parse_uri_rejects_duplicate_query_keys():
+    with pytest.raises(PersonaURIError):
+        parse_uri("persona://x?rev=deadbeef&rev=feedface")
+
+
+def test_parse_uri_rejects_invalid_id_charset():
+    # Slash, dot, backslash, and unicode are all rejected by the strict regex.
+    for bad in ("a/b", "a.b", "a\\b", "あ"):
+        with pytest.raises(PersonaURIError):
+            parse_uri(f"persona://{bad}")
+
+
 def test_validate_payload_warns_on_missing_consent_for_real_person():
     warnings = validate_payload(
         {
@@ -85,3 +113,18 @@ def test_validate_payload_no_warning_with_consent_ref():
 def test_validate_payload_raises_without_persona_id():
     with pytest.raises(PersonaURIError):
         validate_payload({"consent": {}})
+
+
+def test_validate_payload_rejects_invalid_rev():
+    with pytest.raises(PersonaURIError):
+        validate_payload({"persona_id": "x", "rev": "not-hex8"})
+
+
+def test_validate_payload_rejects_non_bool_atomic():
+    with pytest.raises(PersonaURIError):
+        validate_payload({"persona_id": "x", "possession": {"atomic": "yes"}, "blend": 0.0})
+
+
+def test_validate_payload_rejects_bad_capabilities_shape():
+    with pytest.raises(PersonaURIError):
+        validate_payload({"persona_id": "x", "loa_capabilities": ["ok", 42], "blend": 0.0})

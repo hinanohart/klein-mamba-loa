@@ -23,9 +23,21 @@ def _require_torch():
 
 
 def angular_orthogonality(basis: Tensor, *, eps: float = 1e-8) -> float:
-    """Average ``1 - |cos(P_i, P_j)|`` over all distinct (i, j) pairs.
+    """Average ``1 - |cos(P_i, P_j)|`` over all unordered distinct pairs.
 
-    1.0 = perfectly orthogonal; 0.0 = collinear. Used as the S3 gate metric.
+    Returns a float in ``[0.0, 1.0]``:
+    - 1.0 = perfectly orthogonal basis
+    - 0.0 = collinear basis
+
+    Used as the S3 gate metric (threshold 0.7 by default; configured in
+    klein_mamba_loa.eval.runtime_gate.RuntimeGateConfig).
+
+    Implementation notes:
+    - We zero the diagonal explicitly via ``fill_diagonal_`` so the metric
+      stays bounded even when a basis row has near-zero norm (clamped to
+      ``eps``) and its diagonal Gram entry slips below 1.
+    - We average over unordered pairs ``n*(n-1)/2``, matching the
+      orthogonality_penalty in pgc_dfm.py (also unordered, ``Σ_{i<j}``).
     """
     torch = _require_torch()
     if basis.dim() != 2:
@@ -33,9 +45,13 @@ def angular_orthogonality(basis: Tensor, *, eps: float = 1e-8) -> float:
     n = basis.size(0)
     if n < 2:
         return 1.0
+
     norms = basis.norm(dim=1, keepdim=True).clamp_min(eps)
     b = basis / norms
     gram = (b @ b.transpose(0, 1)).abs()
-    off = gram - torch.eye(n, device=gram.device, dtype=gram.dtype)
-    avg_abs_cos = off.sum() / (n * (n - 1))
+    # Strict-upper triangle keeps each unordered pair exactly once and
+    # is unaffected by any drift on the diagonal.
+    upper = torch.triu(gram, diagonal=1)
+    num_pairs = n * (n - 1) / 2
+    avg_abs_cos = upper.sum() / num_pairs
     return float(1.0 - avg_abs_cos.detach().cpu())

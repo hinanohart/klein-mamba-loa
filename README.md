@@ -2,7 +2,7 @@
 
 **Stratified Persona Flow (SPF): disentangled velocity fields for multi-persona multimodal generation.**
 
-License: Apache-2.0. Status: pre-alpha (S0/S1 scaffold).
+License: Apache-2.0. Status: pre-alpha (S0/S1 scaffold + S2 SPF Loss core + S5 release-prep docs; S3/S4 user-gated on GPU).
 
 ## Research direction (hypothesis stage)
 
@@ -14,11 +14,12 @@ Loss formulation (provisional, internal class `PGCDisentangledFMLoss`):
 
 ```
 L = E_t[ || v_pred - v_target ||^2 ]
-  + lambda_ortho * sum_{i != j} | <P_i, P_j> |^2
-  + lambda_cond  * CE( persona_id | v_pred )
+  + lambda_ortho * sum_{i < j} | <P_i, P_j> |^2
+  + lambda_cond  * CE( persona_id | <pooled v_pred, P> )
 ```
 
-Foundations:
+Foundations (see `docs/REFERENCES.md` for retrieved-at evidence):
+
 - *Transfusion: Predict the Next Token and Diffuse Images with One Multi-Modal Model* (arXiv 2408.11039)
 - *The Geometry of Persona: Disentangling Personality from Reasoning in LLMs* (arXiv 2512.07092)
 - *Disentangled Representation Learning via Flow Matching* (arXiv 2602.05214)
@@ -35,31 +36,42 @@ and S4 (small-scale eval against TIMETRAVEL branching probability + orthogonalit
 | Tier 1.5 | 48 GB | Mamba + Janus simultaneous | adds Janus-Pro 1.5B + OpenVLA 7B + TRELLIS.2 4B |
 | Tier 2 | 80 GB+ | scratch fine-tune | DeepSeek-V3, Mochi-1 full, Wan 2.2 BF16 |
 
-VRAM numbers are estimates. Actual measurement is gated on
-`scripts/measure_vram.py` running on a GPU host (S0-c).
+VRAM numbers are estimates. Real measurement requires a GPU host —
+run `python scripts/measure_vram.py --tier 1`. On a CPU host the stub
+returns `gate=DRY_RUN` (structural verification only).
 
 ## Status
 
-- S0 verify (naming / weight path / VRAM stub): GREEN, GREEN, IN_PROGRESS
-- S1 scaffold: in progress (this commit)
-- S2 SPF Loss core: pending
-- S3 toy 3-run: pending
-- S4 small-scale eval: pending
-- S5 docs + release prep: pending
+| Stage | Status | Notes |
+|---|---|---|
+| S0-a (naming 4-axis) | GREEN | WebSearch verified |
+| S0-b (FLUX.2 klein 4B FP8 weight path) | GREEN | Apache-2.0 confirmed |
+| S0-c (VRAM measurement) | DEFERRED to GPU host | dry-run returns `DRY_RUN`; real measurement is a user gate |
+| S1 (scaffold + license guard) | GREEN | `THIRD_PARTY_NOTICES.md` + `scripts/license_guard.py` |
+| S2 (SPF Loss core) | GREEN (CPU) | `klein_mamba_loa/flow/loss/pgc_dfm.py`, unit tests pass on no-torch host |
+| S3 (toy 3-run training) | USER GATE (GPU) | `examples/toy_train.py` scaffold ready; needs GPU host |
+| S4 (small-scale eval) | USER GATE (GPU) | depends on S3 |
+| S5 (docs + release prep) | GREEN (CPU portion) | release tag is user-intervention point |
 
-See `experiments/_wip/transfusion-gibson/pipeline-state.json` for live state.
+Live state: `experiments/_wip/transfusion-gibson/pipeline-state.json`.
 
 ## Ethics
 
-- Persona erasure is a default-on code endpoint
-  (`klein_mamba_loa/persona/erasure.py`), targeting LoRA + Mem0 namespace
-  + LightRAG nodes.
-- MCP `persona://` resource scheme (0.1.0-draft) carries an explicit
-  `consent` field; missing consent triggers a warning and blocks
-  commercial deployment paths.
-- Deadbot (deceased-person persona) generation is **not** gated by code.
+- **Right to be forgotten** is implemented as a default-on code endpoint
+  (`klein_mamba_loa/persona/erasure.py`). **Scope at S1**: the LoRA-pool
+  directory `weights/lora_pool/<id>/` is recursively removed. **Not yet
+  at S1**: Mem0 namespace cleanup and LightRAG node filter cleanup —
+  the adapters land at S2. Operators relying on the endpoint today must
+  also delete from Mem0/LightRAG manually; `ErasurePlan.warnings`
+  surfaces this gap explicitly.
+- The MCP `persona://` resource scheme (0.1.0-draft) carries an explicit
+  `consent` field. Missing `subject_consent_ref` for `real_person=true`
+  or `deadbot=true` produces a `missing-consent` warning from
+  `validate_payload`, which `serving/commercial_gate.py` turns into a
+  hard `CommercialDeploymentBlocked` exception on the commercial path.
+- **Deadbot (deceased-person persona) generation is not gated by code.**
   Operators are responsible for jurisdictional legal review.
-- Real-person personality cloning requires explicit subject consent.
+- **Real-person personality cloning** requires explicit subject consent.
   Adversarial-persona probe traces, if produced, must use the
   access-restricted release channel.
 
@@ -73,39 +85,61 @@ YELLOW / RED).
 ## Install (pre-alpha)
 
 ```bash
-pip install -e ".[dev]"             # core + dev tools
-pip install -e ".[flow,mamba,flux]" # full Tier 1 stack
+pip install -e ".[dev,mcp]"             # CPU-only core + tests
+pip install -e ".[flow,mamba,flux]"     # full Tier 1 stack (needs GPU host for runtime)
 ```
+
+`torch` lives in the `[flow]` / `[mamba]` / `[flux]` extras to keep
+CPU-only S0 verification light (no 800 MB torch download in core CI).
 
 ## Repository layout
 
 ```
 klein_mamba_loa/
-  core/          # tensor / dtype / device utilities
+  core/           # placeholder — tensor / dtype utilities (S2+)
   flow/
-    velocity/    # velocity field network
-    loss/        # SPF Loss (pgc_dfm.py)
-    solver/      # ODE solver wrapping torchcfm
+    velocity/     # placeholder (S3)
+    loss/         # SPF Loss (pgc_dfm.py)
+    solver/       # placeholder (S3)
   persona/
     geometry.py     # persona basis (orthogonal)
-    lora_pool.py    # LoRA hot-swap, possession blend
-    disentangle.py  # orthogonality regularizer helpers
-    erasure.py      # right-to-be-forgotten endpoint
+    lora_pool.py    # LoRA hot-swap surface (NotImplementedError until S2)
+    disentangle.py  # orthogonality metric (angular_orthogonality)
+    erasure.py      # right-to-be-forgotten endpoint (LoRA-only at S1)
   backbone/
-    mamba2_wrapper.py
-    flux2_klein_wrapper.py
-    janus_pro_wrapper.py            # optional, exclusive load
-    mamba_transfusion_bridge.py     # adapter (Mamba <-> Transfusion head)
-  memory/        # Mem0 + LightRAG adapters
-  mcp/           # persona:// resource scheme (0.1.0-draft)
-  serving/       # sglang / vllm integration
-  eval/          # TIMETRAVEL branching, disentangle metric, runtime gate
+    mamba2_wrapper.py             # surface (concrete load = S2)
+    flux2_klein_wrapper.py        # surface (concrete load = S2)
+    janus_pro_wrapper.py          # surface (concrete load = S2)
+    mamba_transfusion_bridge.py   # adapter surface (forward = S2)
+  memory/         # placeholder (S2 Mem0 + LightRAG adapters)
+  mcp/            # persona:// resource scheme (0.1.0-draft)
+  serving/
+    commercial_gate.py            # missing-consent BLOCK (S1)
+  eval/
+    runtime_gate.py # GREEN/YELLOW/RED classifier (S0-c, S3)
 scripts/
+  measure_vram.py        # S0-c VRAM stub
+  license_guard.py       # RED-license refusal
+  check_file_lengths.py  # sub-R14 500-line cap automation
 docs/
+  ARCHITECTURE.md
+  MODEL_CARD.md
+  REFERENCES.md          # arXiv evidence
+  persona-rfc.md         # MCP persona:// RFC 0.1.0-draft
 experiments/_wip/transfusion-gibson/
+  pipeline-state.json    # current stage, gates, kluster chat_id, git_sha
+  CONTEXT.md             # narrative log
+  TODO_NEXT.md           # top-3 next actions
+  monitor_logs/          # audit-agent outputs (append-only)
+  failures/              # R8 permanent failure parking
+examples/
+  toy_train.py           # S3 training harness scaffold (CPU-importable, GPU runnable)
 tests/
+USER_ACTIONS.sh          # one-script bundle of every remaining manual step
 ```
 
 ## Contributing
 
 Pre-alpha. Issues and discussions only; PR queue opens at S2 milestone.
+Read `CONTRIBUTING.md` for the anti-checklist (no RED-license deps, no
+empirical claim before S3, no erasure removal).

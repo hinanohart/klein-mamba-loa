@@ -26,3 +26,10 @@ repos:
         language: system
         files: pyproject\.toml
         pass_filenames: false
+
+      - id: sub-r14-file-length-cap
+        name: refuse Python files over 500 LOC (sub-R14 trigger guard)
+        entry: python scripts/check_file_lengths.py
+        language: system
+        files: \.py$
+        pass_filenames: false

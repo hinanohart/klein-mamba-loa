@@ -35,13 +35,23 @@ This package is **research code**. It is not hardened against:
 1. **Real-person personality cloning** requires explicit subject consent.
    The MCP `persona://` payload's `consent.subject_consent_ref` field
    MUST be populated for any real-person persona. A missing value
-   produces a WARN at inference time and BLOCKS commercial deployment
-   paths.
+   produces a `missing-consent` warning from
+   `klein_mamba_loa.mcp.persona_scheme.validate_payload`, and
+   `klein_mamba_loa.serving.commercial_gate.assert_commercial_ready`
+   turns that warning into a hard `CommercialDeploymentBlocked`
+   exception on the commercial path. Call `assert_commercial_ready`
+   at the request boundary of any commercial deployment.
 
 2. **Right to be forgotten** is implemented as a code-layer endpoint
-   (`klein_mamba_loa/persona/erasure.py`), enabled by default. Calling
-   this endpoint deletes the corresponding LoRA delta, the Mem0
-   namespace, and the LightRAG nodes that reference the persona id.
+   (`klein_mamba_loa/persona/erasure.py`), enabled by default. Scope at
+   the current S1 release: the LoRA-pool directory
+   `weights/lora_pool/<persona_id>/` is recursively deleted (all file
+   types, not only `.safetensors`). **Mem0 namespace cleanup and
+   LightRAG node-filter cleanup are NOT yet wired** (the adapters
+   under `klein_mamba_loa.memory` are S2 work). `ErasurePlan.warnings`
+   surfaces this gap, and `mem0_cleaned` / `lightrag_cleaned` flags on
+   the returned plan are always `False` at S1. Operators relying on
+   the endpoint today must also delete from Mem0/LightRAG manually.
    Backups outside this package are NOT covered.
 
 3. **Deadbot (deceased-person persona) generation** is NOT gated by

@@ -1,0 +1,14 @@
+{
+  "tier": "1",
+  "dry_run": true,
+  "cuda_available": false,
+  "device_name": null,
+  "vram_load_gb": null,
+  "vram_after_forward_gb": null,
+  "vram_max_allocated_gb": null,
+  "forward_seconds": null,
+  "budget_target_gb": 19.0,
+  "budget_tolerance_gb": 5.0,
+  "gate": "DRY_RUN",
+  "notes": "structural verification only; real measurement requires CUDA host and S2 model loaders"
+}

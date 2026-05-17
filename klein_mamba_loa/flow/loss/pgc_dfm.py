@@ -5,22 +5,32 @@ Internal class name: PGCDisentangledFMLoss
 
 Formula (provisional, hypothesis stage):
 
-    L_total = E_t[ || v_pred - v_target ||^2 ]                    # FM term
-            + lambda_ortho * sum_{i != j} | <P_i, P_j> |^2         # persona orthogonality
-            + lambda_cond  * CE(persona_id | v_pred)               # conditional id recovery
+    L_total = E_t[ || v_pred - v_target ||^2 ]                       # FM term
+            + lambda_ortho * sum_{i < j} | <P_i, P_j> |^2             # persona orthogonality
+            + lambda_cond  * CE(persona_id | <pooled v_pred, P>)      # conditional id recovery
 
 Foundations:
-- Transfusion (arXiv 2408.11039) — single Transformer for AR-text + diffusion-image
-- The Geometry of Persona (arXiv 2512.07092) — orthogonal persona embedding
-- Disentangled Representation Learning via Flow Matching (arXiv 2602.05214) — factor-aligned velocity
+- Transfusion (arXiv 2408.11039)
+- The Geometry of Persona (arXiv 2512.07092)
+- Disentangled Representation Learning via Flow Matching (arXiv 2602.05214)
 
-This is a hypothesis-stage formulation. No empirical claim is made until
-S3 (3-run loss-curve study, blueprint section 7) and S4 (small-scale eval).
+Hypothesis-stage formulation. No empirical claim until S3 (3-run loss-curve study,
+blueprint section 7) and S4 (small-scale eval).
 
 Design constraints (blueprint section 7, sub-R14 trigger avoidance):
-- File length capped at <= 500 lines; helpers split into persona/disentangle.py
-- No torch import at module top; torch is required only when the Loss is instantiated
+- File length capped at <= 500 lines; helpers live in persona/disentangle.py
+- No torch import at module top; torch is required only when the Loss is invoked
 - Forward returns a typed SPFLossOutput so callers do not depend on tuple position
+
+Convention notes vs the blueprint draft:
+- The orthogonality penalty was originally written `Σ_{i≠j} <P_i,P_j>^2` in the
+  blueprint. This implementation uses the equivalent unordered-pair form
+  `Σ_{i<j}` so each pair is counted exactly once; effective penalty differs
+  from the ordered convention by a factor of 2 (compensate via lambda_ortho).
+- The conditional CE term is computed from a basis-projection of the pooled
+  v_pred — no external classifier head required. Pass ``persona_id_logits=...``
+  to override with an external head. ``detach_basis_for_cond`` is meaningful
+  on the internal-projection path and is a no-op on the external path.
 """
 
 from __future__ import annotations
@@ -28,7 +38,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:  # pragma: no cover - typing only
+if TYPE_CHECKING:
     from torch import Tensor
 
 
@@ -43,12 +53,14 @@ class SPFLossConfig:
         weight on the conditional persona-id cross-entropy term.
         Typical range: 1e-2 .. 1.0.
     fm_reduction:
-        reduction over batch and time axes for the flow-matching term.
+        reduction over the batch axis for the flow-matching term.
         "mean" (default) or "sum".
     detach_basis_for_cond:
-        if True, the persona basis is detached when computing the cond CE,
-        preventing the CE gradient from pulling basis directions toward
-        class-discriminative-but-non-orthogonal solutions.
+        if True (default) and the conditional CE term is computed via the
+        internal basis-projection path, the basis is detached before the
+        CE so the CE gradient does not pull persona directions toward
+        class-discriminative-but-non-orthogonal solutions. No effect when
+        the caller supplies persona_id_logits externally.
     eps:
         numerical floor for divisions / norms.
     """
@@ -82,9 +94,10 @@ class SPFLossOutput:
 def _require_torch():
     try:
         import torch  # noqa: F401
-    except ImportError as exc:  # pragma: no cover
+    except ImportError as exc:
         raise ImportError(
-            "PGCDisentangledFMLoss requires torch. Install with `pip install klein-mamba-loa[flow]`."
+            "PGCDisentangledFMLoss requires torch. "
+            "Install with `pip install klein-mamba-loa[flow]`."
         ) from exc
     return __import__("torch")
 
@@ -95,16 +108,17 @@ def orthogonality_penalty(
     normalize: bool = True,
     eps: float = 1e-8,
 ) -> Tensor:
-    """Off-diagonal Gram penalty for a persona basis.
+    """Strict-upper-triangular Gram penalty for a persona basis.
 
     Args:
         basis: tensor of shape (num_personas, dim). Rows are persona directions.
-        normalize: if True, basis rows are L2-normalized before the Gram product,
+        normalize: if True, basis rows are L2-normalized before the Gram product
             so the penalty measures angular non-orthogonality independently of norm.
         eps: numerical floor.
 
     Returns:
-        scalar tensor equal to ``sum_{i != j} | <P_i, P_j> |^2``.
+        scalar tensor equal to ``Σ_{i<j} <P_i, P_j>^2`` — each unordered pair
+        contributes once. Returns zero when num_personas < 2.
     """
     torch = _require_torch()
     if basis.dim() != 2:
@@ -120,8 +134,22 @@ def orthogonality_penalty(
         b = basis
 
     gram = b @ b.transpose(0, 1)
-    off_diag_sq = gram.pow(2) - torch.diagflat(gram.diagonal().pow(2))
-    return off_diag_sq.sum()
+    return torch.triu(gram.pow(2), diagonal=1).sum()
+
+
+def _pool_for_cond(v_pred):
+    """Pool v_pred to shape (B, dim) for the conditional CE projection.
+
+    Accepts (B, dim), (B, T, dim), or (B, T_1, ..., T_k, dim). Reduces over
+    all middle axes by mean.
+    """
+    if v_pred.dim() < 2:
+        raise ValueError(
+            f"v_pred must have at least 2 dims (batch, feature); got {tuple(v_pred.shape)}"
+        )
+    if v_pred.dim() == 2:
+        return v_pred
+    return v_pred.flatten(1, -2).mean(dim=1)
 
 
 def _make_nn_module():
@@ -146,20 +174,35 @@ def _make_nn_module():
 
             if v_pred.shape != v_target.shape:
                 raise ValueError(
-                    f"v_pred and v_target shape mismatch: {tuple(v_pred.shape)} vs {tuple(v_target.shape)}"
+                    f"v_pred and v_target shape mismatch: "
+                    f"{tuple(v_pred.shape)} vs {tuple(v_target.shape)}"
                 )
 
             diff = v_pred - v_target
             fm = diff.pow(2).flatten(1).sum(dim=1)
             fm_term = fm.mean() if cfg.fm_reduction == "mean" else fm.sum()
 
-            basis_for_ortho = persona_basis
-            ortho_term = orthogonality_penalty(basis_for_ortho, normalize=True, eps=cfg.eps)
+            ortho_term = orthogonality_penalty(persona_basis, normalize=True, eps=cfg.eps)
 
-            if persona_id_logits is None or persona_id_target is None:
+            used_internal_cond = False
+            if persona_id_target is None:
                 cond_term = v_pred.new_zeros(())
-            else:
+            elif persona_id_logits is not None:
                 cond_term = F.cross_entropy(persona_id_logits, persona_id_target)
+            else:
+                basis_for_cond = (
+                    persona_basis.detach() if cfg.detach_basis_for_cond else persona_basis
+                )
+                v_dim = v_pred.shape[-1]
+                if basis_for_cond.shape[1] != v_dim:
+                    raise ValueError(
+                        f"persona_basis last dim {basis_for_cond.shape[1]} "
+                        f"!= v_pred last dim {v_dim}; cannot internally project"
+                    )
+                pooled = _pool_for_cond(v_pred)
+                cond_logits = pooled @ basis_for_cond.transpose(0, 1)
+                cond_term = F.cross_entropy(cond_logits, persona_id_target)
+                used_internal_cond = True
 
             total = fm_term + cfg.lambda_ortho * ortho_term + cfg.lambda_cond * cond_term
 
@@ -170,6 +213,7 @@ def _make_nn_module():
                     "cond_term": float(cond_term.detach()),
                     "lambda_ortho": cfg.lambda_ortho,
                     "lambda_cond": cfg.lambda_cond,
+                    "used_internal_cond_head": used_internal_cond,
                 }
 
             return SPFLossOutput(
@@ -186,15 +230,29 @@ def _make_nn_module():
 class PGCDisentangledFMLoss:
     """SPF Loss as a callable. Wraps an inner nn.Module lazily.
 
-    The wrapper layer exists so the symbol is importable on a CPU-only host
-    that has not installed torch (e.g. for `python -c "from klein_mamba_loa.flow import PGCDisentangledFMLoss"`
-    during S0 verification). Calling .forward() requires torch at runtime.
+    The wrapper layer keeps this symbol importable on a CPU-only host that
+    has not installed torch (e.g. for `from klein_mamba_loa.flow.loss import
+    PGCDisentangledFMLoss` during S0 verification). Invoking the callable
+    requires torch at runtime.
 
     Usage:
 
         loss_fn = PGCDisentangledFMLoss(SPFLossConfig(lambda_ortho=0.01, lambda_cond=0.1))
-        out = loss_fn(v_pred, v_target, persona_basis, persona_id_logits, persona_id_target)
+
+        # Internal cond head (no external classifier needed):
+        out = loss_fn(v_pred, v_target, persona_basis, persona_id_target=label)
+
+        # External cond head:
+        out = loss_fn(
+            v_pred, v_target, persona_basis,
+            persona_id_logits=ext_logits, persona_id_target=label,
+        )
+
         out.total.backward()
+
+    The loss has no learnable parameters of its own; the persona basis and
+    any external cond head are owned by the caller. ``parameters()`` therefore
+    returns an empty iterator.
     """
 
     def __init__(self, config: SPFLossConfig | None = None):
