@@ -55,11 +55,15 @@ step_github_repo_create() {
     gh repo create "$owner/$REPO_NAME" --public --source=. --push --description \
       "Stratified Persona Flow (SPF) — pre-alpha"
   fi
-  # Patch pyproject.toml placeholder org → real owner.
-  sed -i.bak "s|placeholder-org|$owner|g" "$REPO_ROOT/pyproject.toml"
-  rm -f "$REPO_ROOT/pyproject.toml.bak"
-  log "pyproject.toml placeholders rewritten to $owner. Commit and push:"
-  log "  git -C \"$REPO_ROOT\" add pyproject.toml && git -C \"$REPO_ROOT\" commit -m 'chore: set repo URL'"
+  # Patch placeholder-org → real owner across every doc that ships URLs.
+  for f in pyproject.toml docs/MODEL_CARD.md README.md docs/REFERENCES.md; do
+    if [[ -f "$REPO_ROOT/$f" ]] && grep -q "placeholder-org" "$REPO_ROOT/$f"; then
+      sed -i.bak "s|placeholder-org|$owner|g" "$REPO_ROOT/$f"
+      rm -f "$REPO_ROOT/$f.bak"
+    fi
+  done
+  log "placeholders rewritten to $owner in pyproject.toml + docs. Commit and push:"
+  log "  git -C \"$REPO_ROOT\" add -A && git -C \"$REPO_ROOT\" commit -m 'chore: set repo URL'"
   log "  git -C \"$REPO_ROOT\" push"
 }
 

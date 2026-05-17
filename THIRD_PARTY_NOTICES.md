@@ -38,7 +38,7 @@ The following are listed as optional plugins, **not** in default install:
 
 | Dependency | License constraint |
 |---|---|
-| Janus-Pro 1.5B / 7B | MIT code + Attachment A use-restriction continuity; trademark restriction. Optional via `[flux]` extras subtree (planned). |
+| Janus-Pro 1.5B / 7B | MIT code + Attachment A use-restriction continuity; trademark restriction. Optional load only (`klein_mamba_loa.backbone.janus_pro_wrapper`); not in any default install extra. |
 | SD 3.5 | Stability AI Community License; revenue ceiling, "Powered by Stability AI" attribution. **Not bundled.** |
 | stable-audio-open | same as above. **Not bundled.** |
 | NVIDIA Cosmos | commercial OK; safety guardrails MUST remain active; "Built on NVIDIA Cosmos" attribution required. **Not bundled.** |
@@ -59,8 +59,10 @@ These are **never** runtime dependencies:
 - Hunyuan3D-2 — > 1M MAU requires Tencent prior approval
 
 If a future contribution introduces any of these as a runtime dependency,
-it MUST be rejected by license-guard CI (`scripts/license_guard.py`,
-implemented at S1 milestone).
+it is rejected by `scripts/license_guard.py` in pre-commit and in CI
+(`.github/workflows/ci.yml`). The guard parses this section directly
+(both bold and plain bullets) — adding a new entry here is sufficient
+to block matching `pyproject.toml` deps on the next commit.
 
 ## Datasets
 
@@ -69,8 +71,11 @@ implemented at S1 milestone).
 
 ## How to update this file
 
-When `pyproject.toml` changes:
+This file is the canonical license map. When you add a new dependency
+to `pyproject.toml`:
 
-```bash
-python scripts/license_guard.py --refresh-notices  # planned, S1
-```
+1. Add a row to the appropriate `GREEN` / `YELLOW` / `RED` section above.
+2. Run `python3 scripts/license_guard.py --check` locally; it will refuse
+   commits that introduce a RED-listed dependency.
+3. `python3 scripts/license_guard.py --list-red` prints the resolved
+   RED set (`DEFAULT_RED_NAMES` ∪ parsed entries from this file).

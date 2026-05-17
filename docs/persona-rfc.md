@@ -26,10 +26,24 @@ between agents). A first-class URI scheme has three benefits:
 persona://<persona_id>[@<namespace>][?rev=<sha256_8>&blend=<float>]
 ```
 
-- `persona_id`: ASCII, no `/`, must not start with `.`
-- `namespace`: optional logical bucket
-- `rev`: 8-char prefix of SHA-256 over the materialized payload
-- `blend`: `[0, 1]`
+Grammar (enforced by the reference implementation):
+
+- `persona_id`: `^[A-Za-z0-9_-]{1,64}$` — ASCII alphanumerics, hyphen,
+  underscore; no dot, no slash, no whitespace, no leading dot.
+- `namespace`: `^[A-Za-z0-9_.-]{1,64}$` — adds dot to the persona_id
+  charset (e.g. `team.alpha`).
+- `rev`: `^[0-9a-fA-F]{8}$` — 8-char (4-byte) lowercase-or-uppercase
+  hex prefix of the **SHA-256 of the persona's weights bundle**
+  (concatenation of all LoRA delta files in `weights/lora_pool/<persona_id>/`,
+  in lexicographic filename order). This is the value the resource
+  server hashes; payload-level `rev` MUST equal the URI-level `rev`
+  when both are present.
+- `blend`: float in `[0, 1]`.
+- The URI MUST NOT carry a path component after the authority
+  (`persona://x/y` is invalid — `y` is silently dropped by URI parsers
+  unless the implementation rejects, as the reference implementation
+  does).
+- Query keys MUST appear at most once.
 
 ## Payload (JSON)
 
@@ -50,14 +64,28 @@ persona://<persona_id>[@<namespace>][?rev=<sha256_8>&blend=<float>]
 }
 ```
 
+Field semantics:
+
+- `rev` (payload-level) is the same 8-hex weights-bundle SHA-256 prefix
+  as the URI field; the validator does not currently cross-check
+  payload-vs-URI `rev` (planned 0.2.0).
+- `possession.atomic` must be a JSON boolean.
+- `loa_capabilities` and `memory_refs` must be `array<string>`.
+
 ## Validation
 
 `klein_mamba_loa.mcp.persona_scheme.validate_payload` returns a list of
-warning strings. A warning whose substring is `missing-consent` MUST
-be treated as a **block** for commercial deployment paths.
+warning strings. A warning whose substring begins with `missing-consent`
+MUST be treated as a **block** for commercial deployment paths; the
+reference implementation enforces this via
+`klein_mamba_loa.serving.commercial_gate.assert_commercial_ready` which
+raises `CommercialDeploymentBlocked`.
 
-A `PersonaURIError` is raised for malformed payloads (missing
-`persona_id`, malformed `consent`, blend out of range).
+`PersonaURIError` is raised for malformed payloads: missing
+`persona_id`, persona_id outside the regex, malformed `consent`,
+non-bool `possession.atomic`, non-`array<string>` `loa_capabilities`
+or `memory_refs`, blend out of range, or `rev` outside the 8-hex
+format.
 
 ## Reference implementation
 
@@ -71,9 +99,19 @@ A `PersonaURIError` is raised for malformed payloads (missing
   for 0.1.0-draft.
 - session-bound vs. agent-bound personas: the draft treats personas
   as orthogonal to sessions; refinement is welcome.
+- payload-vs-URI `rev` cross-validation: deferred to 0.2.0 once the
+  MCP transport WG fixes whether the URI hash should canonicalise
+  weights-bundle order or rely on a manifest.
 
 ## Status
 
-`0.1.0-draft`. The reference implementation is feature-complete
-for the parser and validator. Wire-format compatibility shims with
-the MCP SDK land at S5 of this project's pipeline.
+`0.1.0-draft`. The reference implementation enforces:
+
+- grammar above for `persona://` URIs
+- payload schema (persona_id, namespace, rev, consent, possession,
+  blend, loa_capabilities, memory_refs)
+- `missing-consent` warning surfacing for real_person / deadbot
+  payloads lacking `subject_consent_ref`
+
+Wire-format compatibility shims with the MCP SDK land at S5 of this
+project's pipeline.

@@ -1,10 +1,16 @@
 """License guard — refuse RED-license dependencies in pyproject.toml.
 
-Used as a pre-commit hook and as a CI step. The RED list is the union of
-``DEFAULT_RED_NAMES`` (hardcoded for fast CI) and any names parsed from the
-``RED (商用 OSS 不可)`` section of ``THIRD_PARTY_NOTICES.md`` (single source
-of truth for license claims). When the notices file lists a name not in
-``DEFAULT_RED_NAMES``, the parsed set still blocks installs.
+Used as a pre-commit hook and as a CI step. The RED list is the union of:
+
+1. ``DEFAULT_RED_NAMES`` — hardcoded for fast CI startup and to immunise the
+   guard against parser bugs.
+2. Names parsed from the ``## RED`` section of ``THIRD_PARTY_NOTICES.md``
+   (the documented single source of truth). When the notices file lists a
+   name not in ``DEFAULT_RED_NAMES``, the parsed set still blocks installs.
+
+The dependency-name comparison is done in PEP 503 canonical form (lowercase,
+runs of ``[-_.]`` collapsed to ``-``) so ``flow_matching`` in pyproject and
+``flow-matching`` in the notices both match.
 """
 
 from __future__ import annotations
@@ -25,7 +31,6 @@ NOTICES = REPO_ROOT / "THIRD_PARTY_NOTICES.md"
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 DEFAULT_RED_NAMES = {
-    "flow_matching",
     "flow-matching",
     "facebookresearch-flow-matching",
     "chameleon",
@@ -41,6 +46,13 @@ DEFAULT_RED_NAMES = {
 }
 
 
+def _canon(name: str) -> str:
+    """PEP 503 canonicalisation: lower-case, runs of [-_.] → single '-'."""
+    s = name.strip().lower()
+    s = re.sub(r"[-_.\s]+", "-", s)
+    return s.strip("-")
+
+
 def _flatten_deps(pyproject_data: dict) -> list[str]:
     out: list[str] = []
     project = pyproject_data.get("project", {})
@@ -51,52 +63,88 @@ def _flatten_deps(pyproject_data: dict) -> list[str]:
 
 
 def _pkg_name(spec: str) -> str:
-    # Strip at the earliest occurrence of any separator (not the first
-    # separator in iteration order — that orderswas the previous bug).
+    """Extract the package name from a PEP 508 dependency string."""
     seps = [">=", "<=", "==", "~=", "!=", ">", "<", " ", "[", ";", "@"]
     found = [spec.find(s) for s in seps]
     positions = [i for i in found if i != -1]
-    if not positions:
-        return spec.strip().lower()
-    return spec[: min(positions)].strip().lower()
+    raw = spec if not positions else spec[: min(positions)]
+    return raw.strip().lower()
 
 
-_RED_BULLET_RE = re.compile(r"^\s*[-*]\s+\*\*([A-Za-z0-9_.\-/]+)\*\*")
+# Bullet structure: `- [bold|plain name] — license info`.
+# We split on the first em-dash / en-dash / "--" sequence (with surrounding
+# whitespace) to separate the *name field* from the license blurb.
+_BULLET_RE = re.compile(r"^\s*[-*]\s+(.+?)\s*[—–]\s+", re.UNICODE)
+# Alternative: bullet without em-dash uses ` -- ` ASCII fallback.
+_BULLET_DASH_RE = re.compile(r"^\s*[-*]\s+(.+?)\s+--\s+")
+# Alias inside parens: e.g. "facebookresearch/memory (Memory Layers at Scale)".
+_PAREN_RE = re.compile(r"\(([^)]+)\)")
+# Skip tokens that are noise (license boilerplate, single short words).
+_NOISE_TOKENS = {"and", "or", "the", "license", "see", "nvlabs"}
+
+
+def _slugify(s: str) -> str:
+    out = re.sub(r"[^A-Za-z0-9]+", "-", s.strip().lower()).strip("-")
+    return out
+
+
+def _is_useful(slug: str) -> bool:
+    return len(slug) >= 3 and slug not in _NOISE_TOKENS
 
 
 def _parse_red_from_notices(text: str) -> set[str]:
-    """Pick names out of the RED section of THIRD_PARTY_NOTICES.md.
+    """Extract RED-section package slugs from THIRD_PARTY_NOTICES.md.
 
-    Strategy: locate the RED heading, then collect bullet labels until the
-    next top-level section heading. Names are slug-normalized (lowercase
-    plus `/` → `-`). Best-effort — the hardcoded ``DEFAULT_RED_NAMES`` is
-    always enforced regardless of parse success.
+    Robust to:
+      * bold (`- **name**`) and plain (`- name`) bullet styles
+      * em-dash (—), en-dash (–), and `--` separator forms
+      * alternation via ``/`` ("FLUX.1-dev / FLUX.1-Kontext-dev")
+      * parenthetical aliases ("facebookresearch/memory (Memory Layers at Scale)")
+
+    All slugs are PEP-503 canonical (``flow_matching`` → ``flow-matching``).
     """
-    lines = text.splitlines()
     out: set[str] = set()
     in_red = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("###"):
-            in_red = "RED" in stripped
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line.startswith("## "):
+            in_red = "RED" in line.upper()
             continue
-        if stripped.startswith("##") and not stripped.startswith("###"):
-            in_red = False
+        if line.startswith("### "):
             continue
         if not in_red:
             continue
-        m = _RED_BULLET_RE.match(line)
-        if m:
-            raw = m.group(1).lower().replace("/", "-")
-            out.add(raw)
+        m = _BULLET_RE.match(raw) or _BULLET_DASH_RE.match(raw)
+        if not m:
+            continue
+        name_part = m.group(1).strip().replace("**", "").strip()
+        # 1. Parenthetical aliases stand alone.
+        for paren in _PAREN_RE.findall(name_part):
+            slug = _slugify(paren)
+            if _is_useful(slug):
+                out.add(slug)
+        cleaned = _PAREN_RE.sub("", name_part).strip()
+        # 2. Slash-alternation: each side is a candidate.
+        sides = [side.strip() for side in re.split(r"\s*/\s*", cleaned) if side.strip()]
+        for side in sides:
+            slug = _slugify(side)
+            if _is_useful(slug):
+                out.add(slug)
+        # 3. Full joined form ("facebookresearch/flow_matching"
+        #     → "facebookresearch-flow-matching") matches DEFAULT entries.
+        if len(sides) > 1:
+            joined = _slugify(cleaned)
+            if _is_useful(joined):
+                out.add(joined)
     return out
 
 
 def _collect_red_names() -> set[str]:
-    red = set(DEFAULT_RED_NAMES)
+    red = {_canon(n) for n in DEFAULT_RED_NAMES}
     if NOTICES.exists():
         try:
-            red |= _parse_red_from_notices(NOTICES.read_text(encoding="utf-8"))
+            parsed = _parse_red_from_notices(NOTICES.read_text(encoding="utf-8"))
+            red |= {_canon(n) for n in parsed}
         except OSError:
             pass
     return red
@@ -108,8 +156,9 @@ def check(red_names: set[str] | None = None) -> int:
         return 2
     data = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     deps = _flatten_deps(data)
-    red = red_names if red_names is not None else _collect_red_names()
-    violations = [d for d in deps if _pkg_name(d) in red]
+    red_input = red_names if red_names is not None else _collect_red_names()
+    red_canon = {_canon(n) for n in red_input}
+    violations = [d for d in deps if _canon(_pkg_name(d)) in red_canon]
     if violations:
         print("license_guard: RED-license dependencies detected:", file=sys.stderr)
         for v in violations:

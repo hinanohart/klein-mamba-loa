@@ -1,16 +1,31 @@
 """S3 toy training harness — scaffold (CPU-importable, GPU-runnable).
 
-Purpose: demonstrate that `PGCDisentangledFMLoss` produces a monotone-
-decreasing loss curve when trained on a synthetic 2-D multi-persona
-trajectory, with `angular_orthogonality(persona_basis) >= 0.7` at the
-end. Three independent seeds are run and their loss curves averaged
-(blueprint section 7 S3 gate).
+WHAT THIS IS, AND WHAT IT IS NOT
+================================
+
+This file exercises that `PGCDisentangledFMLoss`, the persona basis
+optimizer step, and the runtime gate all compose end-to-end without
+runtime errors. It also produces a JSON report that the S3 gate can
+consume.
+
+**It does NOT validate the SPF Loss scientifically.** The synthetic
+batch is constructed so that the velocity target is a row of the
+persona basis itself (`_make_synthetic_batch`), and the basis is a
+learnable parameter passed to Adam. The model is asked to predict
+`basis[i] + noise` from `x ~ N(0, I)` — the optimal solution is for
+the linear model to learn the per-persona mean and for the basis to
+remain anywhere orthogonal. "All-runs-decreased" follows mechanically
+from this construction, NOT from the loss formulation generalising.
+
+The real scientific validation lives in S3 on a GPU host with
+Mamba-2 + FLUX.2 klein, where the velocity target comes from a
+forward-noised data batch and the basis must be discovered, not
+copied. See `docs/MODEL_CARD.md` "Limitations" for the explicit
+disclosure.
 
 CPU behaviour: importable without torch installed; calling `main()`
 when torch is missing prints a hint and exits 0 (so structural CI
-doesn't fail). Real training requires torch + a GPU (or a patient CPU
-host); the synthetic problem is small enough to converge in seconds
-on a 24 GB GPU.
+doesn't fail). Real training requires torch + a GPU.
 
 This file is intentionally minimal — production-grade training lives
 under S2+ in `klein_mamba_loa.backbone.*` once the wrappers land.

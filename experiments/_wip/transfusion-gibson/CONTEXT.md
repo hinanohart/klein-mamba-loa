@@ -1,6 +1,6 @@
 # CONTEXT — Transfusion-Gibson OSS (klein-mamba-loa)
 
-最終更新: 2026-05-17 (audit pass 完了時点) / 200 行以内 / /compact 跨ぎ recovery 用 entry point
+最終更新: 2026-05-18 (residual audit 完了時点) / 200 行以内 / /compact 跨ぎ recovery 用 entry point
 
 ## Freeze 参照
 
@@ -11,7 +11,27 @@
 
 ## 直近決定 log
 
-### 2026-05-17 audit pass (本 session)
+### 2026-05-18 residual audit pass
+
+primary audit (2026-05-17) を疑って 3 並列再探索: architect / verifier / critic。critic verdict は **REJECT** (5/5 pre-commitment hit)。**全件 self-fix 完了**:
+
+- `scripts/license_guard.py`: 真の parser 実装。前の regex は `**name**` bold 要求で実 file (plain text bullets) から 0 抽出していた。bold/plain 両形式、em-dash/en-dash/--、slash-alternation、paren alias を扱う。PEP 503 canonical 比較で `flow_matching` ↔ `flow-matching` 同一視。
+- `.github/workflows/ci.yml`: `torch-tests` job 追加。CPU torch wheel + test_pgc_dfm/geometry/disentangle が CI 上で走る。
+- `docs/persona-rfc.md`: `persona_id` 正規表現を impl と統一、`rev` semantics を weights-bundle sha と明記、query-key uniqueness / path-after-authority も文書化。
+- `examples/toy_train.py` + `docs/MODEL_CARD.md`: synthetic target が basis 自身由来で "convergence" が機械的であることを明示 — 構造検証であって科学的検証ではない。
+- `USER_ACTIONS.sh`: placeholder-org rewrite を pyproject 以外 (MODEL_CARD, README, REFERENCES) にも拡張。
+- `README.md`: 三本 arXiv ID に inline `[unverified]` marker。Gibson disclaimer paragraph 追加 (Persona Vector ≠ Dixie Flatline)。
+- `docs/MODEL_CARD.md`: limitations に toy_train degeneracy + Gibson disclaimer。
+- `klein_mamba_loa/{core,flow/velocity,flow/solver,memory}/__init__.py`: S1 status disclosure に書き換え (前は "S2 wiring" 一行で empty 状態を隠蔽していた)。
+- `tests/`: test_backbone_surface, test_lora_pool, test_measure_vram, test_toy_train_import 追加 + test_commercial_gate に malformed payload テスト追加。
+- `tests/test_license_guard.py`: parser を実 file で exercise する regression test。
+- `THIRD_PARTY_NOTICES.md` / `CONTRIBUTING.md` / `docs/ARCHITECTURE.md`: "planned" 用語を実装済に更新、CONTRIBUTING anti-checklist に check_file_lengths / commercial_gate / REFERENCES verify を追加。
+- `.gitignore`: vram_report.json / toy_train_report.json を ignore、tracked vram_report.json を untrack。
+- `experiments/_wip/transfusion-gibson/monitor_logs/2026-05-18-*.md`: 3 agent の生 verdict を persist (false-positive 教訓を operationalize)。
+
+検証: 85/85 pytest pass、license_guard 真 parser 経由で 25 deps 0 RED、check_file_lengths OK。
+
+### 2026-05-17 audit pass (前 session)
 
 3 並列 read-only agent (architect / omc-code-reviewer / critic) で CRITICAL × 5、MAJOR × 11、MINOR 多数、OPEN blueprint remainder 6 を発見。**全件 self-fix 完了**:
 

@@ -18,11 +18,11 @@ L = E_t[ || v_pred - v_target ||^2 ]
   + lambda_cond  * CE( persona_id | <pooled v_pred, P> )
 ```
 
-Foundations (see `docs/REFERENCES.md` for retrieved-at evidence):
+Foundations (see `docs/REFERENCES.md` for retrieved-at evidence — these arXiv IDs are `pending-human-verify` and MUST be opened in a browser before citing in any external publication; `USER_ACTIONS.sh references-verify` is the flip):
 
-- *Transfusion: Predict the Next Token and Diffuse Images with One Multi-Modal Model* (arXiv 2408.11039)
-- *The Geometry of Persona: Disentangling Personality from Reasoning in LLMs* (arXiv 2512.07092)
-- *Disentangled Representation Learning via Flow Matching* (arXiv 2602.05214)
+- *Transfusion: Predict the Next Token and Diffuse Images with One Multi-Modal Model* (arXiv 2408.11039) [unverified]
+- *The Geometry of Persona: Disentangling Personality from Reasoning in LLMs* (arXiv 2512.07092) [unverified]
+- *Disentangled Representation Learning via Flow Matching* (arXiv 2602.05214) [unverified]
 
 **This is not a validated result.** No empirical claim is made until S3 (3-run loss-curve study)
 and S4 (small-scale eval against TIMETRAVEL branching probability + orthogonality metric).
@@ -54,6 +54,24 @@ returns `gate=DRY_RUN` (structural verification only).
 | S5 (docs + release prep) | GREEN (CPU portion) | release tag is user-intervention point |
 
 Live state: `experiments/_wip/transfusion-gibson/pipeline-state.json`.
+
+## Concept naming disclaimer
+
+The repository name (`loa`) and several internal labels — "Persona-
+Geometry", "Stratified Persona Flow", "Loa hot-swap" — are
+**inspirational labels for technical primitives**, not claims of
+literary equivalence to William Gibson's Sprawl trilogy or to any
+other prior persona-vector formalism. The concept-to-technology
+mapping is many-to-many and wishful only at the framing level. In
+particular:
+
+- a `PersonaVector` here is a learned condition direction, **not**
+  Dixie Flatline (no persistent memory, no self-identity).
+- LoRA hot-swap is **not** Loa possession in the literary sense
+  (no agency transfer between substrates).
+- "Stratified Persona Flow" deliberately differs from the prior
+  arXiv 2602.15669 "Persona-Flow" (OCEAN trait vector algebra) —
+  same word, different formalism (see `docs/REFERENCES.md`).
 
 ## Ethics
 

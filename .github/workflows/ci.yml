@@ -44,6 +44,25 @@ jobs:
       - name: Pytest (no-torch path)
         run: pytest tests/test_persona_scheme.py tests/test_erasure.py tests/test_runtime_gate.py tests/test_license_guard.py tests/test_commercial_gate.py -q
 
+  torch-tests:
+    # SPF Loss core math, persona geometry, and the angular orthogonality
+    # metric all need torch. We install the CPU wheel (cheap-ish, ~250 MB)
+    # because GitHub Actions has no GPU and skipping these tests would
+    # leave the project's central math uncovered in CI.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install (CPU torch + dev)
+        run: |
+          python -m pip install --upgrade pip
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -e ".[dev,mcp]"
+      - name: Pytest (torch-gated)
+        run: pytest tests/test_pgc_dfm.py tests/test_geometry.py tests/test_disentangle.py -q
+
   vram-stub-dry-run:
     runs-on: ubuntu-latest
     steps:

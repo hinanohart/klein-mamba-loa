@@ -5,6 +5,65 @@ All notable changes are tracked here. The format follows
 
 ## [Unreleased]
 
+### Added — residual audit pass (2026-05-18)
+
+- `tests/test_backbone_surface.py`, `tests/test_lora_pool.py`,
+  `tests/test_measure_vram.py`, `tests/test_toy_train_import.py` —
+  surface-import tests so the no-torch CI path covers every wrapper.
+- `klein_mamba_loa/core/`, `flow/velocity/`, `flow/solver/`,
+  `memory/` — S1-status disclosure docstrings (was 1-line "S2 wiring"
+  comments that didn't disclose the empty-package state).
+- README: "Concept naming disclaimer" paragraph (Gibson many-to-many,
+  Persona Vector ≠ Dixie Flatline, LoRA hot-swap ≠ Loa possession);
+  `[unverified]` inline markers on the three foundation arXiv IDs.
+- `MODEL_CARD.md` Limitations: explicit toy_train.py degeneracy note
+  + Gibson concept-mapping bullet.
+- `experiments/_wip/transfusion-gibson/monitor_logs/2026-05-18-*.md`
+  persisted outputs from the 3 audit agents (architect / verifier /
+  meta-critic) so future audits can compare.
+- `.github/workflows/ci.yml` `torch-tests` job: installs CPU torch
+  wheel and runs `test_pgc_dfm.py / test_geometry.py / test_disentangle.py`
+  on every push.
+
+### Changed — residual audit pass (2026-05-18)
+
+- `scripts/license_guard.py`: parser now handles BOTH bold
+  (`- **name**`) and plain (`- name`) bullet styles, em-dash /
+  en-dash / `--` separators, slash-alternation, and parenthetical
+  aliases. Previous regex matched zero entries in the real notices
+  file; the "single source of truth" claim was theatrical. Comparison
+  is now PEP 503 canonical (`flow_matching` ↔ `flow-matching`).
+- `tests/test_license_guard.py`: new tests for the parser
+  (`test_parser_lifts_real_notices_entries`,
+  `test_parser_handles_both_bullet_styles`,
+  `test_check_blocks_synthetic_red_from_notices`) so a future
+  parser regression is loud.
+- `docs/persona-rfc.md`: `persona_id` grammar tightened to
+  `^[A-Za-z0-9_-]{1,64}$` (matches implementation), `rev` semantics
+  unambiguously stated as 8-hex prefix of the LoRA-bundle SHA-256,
+  query-key uniqueness + path-after-authority rejection documented,
+  payload schema cross-typed.
+- `examples/toy_train.py` + `docs/MODEL_CARD.md`: explicit
+  "structural smoke test, not scientific validation" disclosure
+  because the synthetic batch sources targets from the basis itself.
+- `USER_ACTIONS.sh github-repo-create`: now sweeps `pyproject.toml`,
+  `docs/MODEL_CARD.md`, `README.md`, `docs/REFERENCES.md` for
+  `placeholder-org` (was pyproject only — MODEL_CARD citation would
+  have leaked the placeholder into arXiv v1).
+- `THIRD_PARTY_NOTICES.md`: stale "planned" wording replaced with
+  the live state; `--refresh-notices` claim removed.
+- `CONTRIBUTING.md`: anti-checklist now mentions the 500-LOC cap
+  (with `check_file_lengths.py` reference), the commercial gate
+  (`assert_commercial_ready`), and the REFERENCES-verify gate.
+- `docs/ARCHITECTURE.md` module-boundary table: each module now
+  marks its **S1 status** (live vs surface stub vs empty package)
+  so readers don't expect substance that doesn't exist yet.
+- `.gitignore`: `experiments/_wip/*/vram_report.json` and
+  `toy_train_report.json` ignored; the tracked dry-run artifact
+  was untracked (was always-modified-after-first-run).
+
+## [Unreleased earlier]
+
 ### Added — audit pass (2026-05-17)
 
 - `klein_mamba_loa/backbone/mamba2_wrapper.py`,

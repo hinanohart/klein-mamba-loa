@@ -43,22 +43,31 @@ note (not in this repository).
 `klein_mamba_loa/` is a single namespace; sub-packages map 1:1 to the
 diagram nodes above.
 
-- `core/` — tensor / dtype / device utilities; deliberately small.
+- `core/` — tensor / dtype / device utilities. **S1 status**: empty
+  package; substance lands at S2+.
 - `flow/` — velocity field, SPF Loss (`flow/loss/pgc_dfm.py`), ODE
-  solver wrapper.
-- `persona/` — geometry (orthogonal basis), LoRA pool (hot-swap),
-  disentangle metrics, code-layer **erasure**.
+  solver wrapper. **S1 status**: only `flow/loss/pgc_dfm.py` is live;
+  `flow/velocity/` and `flow/solver/` are surface stubs.
+- `persona/` — geometry (orthogonal basis), LoRA pool (hot-swap
+  surface; concrete swap lands at S2), disentangle metric, code-layer
+  **erasure** (LoRA-only at S1; Mem0/LightRAG at S2).
 - `backbone/` — Mamba-2, FLUX.2 klein, optional Janus-Pro, and the
   Mamba-Transfusion bridge that adapts Mamba hidden states into the
-  Transfusion diffusion head.
-- `memory/` — Mem0 and LightRAG adapters.
+  Transfusion diffusion head. **S1 status**: surface wrappers
+  (`NotImplementedError` on `.load` / `.__call__`); concrete loads
+  at S2.
+- `memory/` — Mem0 and LightRAG adapters. **S1 status**: empty
+  package; substance lands at S2.
 - `mcp/` — `persona://` resource scheme (0.1.0-draft) parser and
-  payload validator.
+  payload validator. **S1 status**: live, see `docs/persona-rfc.md`.
 - `eval/` — TIMETRAVEL branching ECE, disentangle metrics, runtime
-  gate (GREEN / YELLOW / RED classification).
-- `serving/` — sglang / vllm wrappers (S5 release).
-- `scripts/` — operational helpers (`measure_vram.py`, future
-  `license_guard.py`).
+  gate (GREEN / YELLOW / RED classification). **S1 status**: runtime
+  gate live; TIMETRAVEL eval at S4.
+- `serving/` — sglang / vllm wrappers; commercial-consent gate
+  (`commercial_gate.py`) is live at S1, sglang/vllm wiring at S5.
+- `scripts/` — operational helpers: `measure_vram.py` (S0-c stub),
+  `license_guard.py` (live RED refusal), `check_file_lengths.py`
+  (live 500-LOC cap).
 
 ## Pipeline stages
 

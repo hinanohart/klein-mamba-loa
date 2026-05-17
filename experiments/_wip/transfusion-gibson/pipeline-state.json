@@ -2,13 +2,33 @@
   "schema_version": "0.1.0",
   "project": "klein-mamba-loa",
   "started_at": "2026-05-17",
-  "current_stage": "AUDIT_PASS_COMPLETE_BLOCKED_ON_GPU",
-  "audit_pass": {
-    "performed_at": "2026-05-17",
-    "agents": ["architect", "omc-code-reviewer", "critic"],
-    "verdict": "CONDITIONAL ACCEPT (all conditions addressed in this commit)",
-    "monitor_logs_dir": "experiments/_wip/transfusion-gibson/monitor_logs/"
-  },
+  "current_stage": "RESIDUAL_AUDIT_COMPLETE_BLOCKED_ON_GPU",
+  "audit_passes": [
+    {
+      "performed_at": "2026-05-17",
+      "name": "primary",
+      "agents": ["architect", "omc-code-reviewer", "critic"],
+      "verdict": "CONDITIONAL ACCEPT (14 findings closed in commit ce9b329)",
+      "verifier_verdict": "ACCEPT"
+    },
+    {
+      "performed_at": "2026-05-18",
+      "name": "residual",
+      "agents": ["architect", "verifier", "critic"],
+      "verdict_per_agent": {
+        "architect": "CONDITIONAL ACCEPT (7 conditions)",
+        "verifier": "CONDITIONAL ACCEPT (Gibson disclaimer)",
+        "critic": "REJECT (5/5 pre-committed predictions hit)"
+      },
+      "closure": "all findings addressed in this commit",
+      "monitor_logs_dir": "experiments/_wip/transfusion-gibson/monitor_logs/",
+      "log_files": [
+        "2026-05-18-architect.md",
+        "2026-05-18-verifier.md",
+        "2026-05-18-meta-critic.md"
+      ]
+    }
+  ],
   "stages": {
     "S0": {
       "status": "GREEN",
@@ -17,7 +37,7 @@
           "name": "naming 4-axis verify",
           "status": "GREEN",
           "verified_at": "2026-05-17",
-          "evidence": "WebSearch x4 returned 0 collision (GitHub/PyPI/PyPI namespace/arXiv title). Persona-Flow (arXiv 2602.15669) exists in OCEAN-vector-algebra context; SPF naming avoids collision. gh repo search remains a USER_ACTIONS.sh step 1 (auth gate)."
+          "evidence": "WebSearch x4 returned 0 collision. gh repo search remains a USER_ACTIONS.sh step 1 (auth gate)."
         },
         "S0-b": {
           "name": "Flux.2 klein 4B FP8 weight path",
@@ -33,56 +53,57 @@
         }
       }
     },
-    "S1": {
-      "status": "GREEN",
-      "completed_at": "2026-05-17"
-    },
+    "S1": {"status": "GREEN", "completed_at": "2026-05-17"},
     "S2": {
       "status": "GREEN_CORE",
       "completed_at": "2026-05-17",
-      "evidence": "PGCDisentangledFMLoss (~270 lines, < 500 sub-R14 cap), orthogonality_penalty (Σ_{i<j}), basis-projection internal cond head, detach_basis_for_cond wired, persona_basis/disentangle/erasure/runtime_gate/commercial_gate/backbone surfaces, 65 unit tests passing on a torch-available host (no-torch path skips torch-needing tests cleanly)."
+      "evidence": "PGCDisentangledFMLoss (~270 lines, < 500 cap), Σ_{i<j} orthogonality, basis-projection internal cond head, detach_basis_for_cond wired, full surface (persona/backbone/eval/mcp/serving)."
     },
     "S3": {
       "status": "USER_GATE_GPU_REQUIRED",
-      "notes": "Toy 3-run on Tier-1 stack. examples/toy_train.py scaffold passes the gate on the synthetic problem (mean_final_ortho ≈ 1.0, all_runs_decreased=true at --steps 20)."
+      "notes": "Toy 3-run on Tier-1 stack. examples/toy_train.py scaffold is STRUCTURAL (synthetic targets sourced from basis itself — not scientific validation); real S3 validation needs Mamba-2 + FLUX.2 on a GPU."
     },
-    "S4": {
-      "status": "USER_GATE_GPU_REQUIRED",
-      "notes": "TIMETRAVEL branching ECE + orthogonality > 0.7."
-    },
-    "S5": {
-      "status": "GREEN_CPU_PORTION",
-      "completed_at": "2026-05-17"
-    }
+    "S4": {"status": "USER_GATE_GPU_REQUIRED", "notes": "TIMETRAVEL branching ECE + orthogonality > 0.7."},
+    "S5": {"status": "GREEN_CPU_PORTION", "completed_at": "2026-05-17"}
   },
   "last_gate": "S0:GREEN, S1:GREEN, S2:GREEN_CORE, S3:USER_GATE_GPU, S4:USER_GATE_GPU, S5:GREEN_CPU_PORTION",
-  "next_action": "USER_ACTIONS.sh covers every remaining step (1: gh repo create, 2: hf-login, 3: install-tier1, 4: measure-vram, 5: toy-train-3run, 6: references-verify, 7: release-tag, 8: arxiv-submit). CLAUDE-SIDE remaining: none until new directives.",
+  "next_action": "USER_ACTIONS.sh covers every remaining step (1-8). CLAUDE-SIDE remaining: none until new directives.",
   "kluster_chat_id": "iblk7oedo1",
   "kluster_status": "trial-ended; verifier protection disabled; visit https://platform.kluster.ai/ for plan",
   "git_sha_initial": "981af1a73edf355de7c8d798399e0e24b9185085",
   "git_sha_pre_audit": "9e7e438",
-  "git_sha_post_audit": "ce9b329",
-  "audit_findings_summary": {
+  "git_sha_post_primary_audit": "ce9b329",
+  "git_sha_post_residual_audit": "pending-commit",
+  "residual_audit_findings_summary": {
     "critical": [
-      "detach_basis_for_cond unimplemented",
-      "L_cond classifier head not in code",
-      "rev hex8 validation absent",
-      "erasure shallow + silent rmdir failure",
-      "lora_pool surface advertised but URI blend has no consumer"
+      "license_guard parser extracted 0 entries from real notices file (bold-only regex on plain bullets)",
+      "CI did not run torch-gated tests (test_pgc_dfm/geometry/disentangle)",
+      "rev semantics inconsistent between RFC and impl (materialized payload vs weights-bundle sha)",
+      "toy_train.py target degeneracy undisclosed (basis sources its own targets)",
+      "Gibson disclaimer missing from README/MODEL_CARD (Persona Vector mistaken for Dixie Flatline)"
+    ],
+    "major": [
+      "placeholder-org leaked into MODEL_CARD citation; USER_ACTIONS.sh only swept pyproject",
+      "README cited arXiv:2512.07092 as if real; REFERENCES had pending-human-verify but inline did not",
+      "persona-rfc.md persona_id grammar disagreed with implementation regex",
+      "vram_report.json tracked artifact; not in .gitignore",
+      "THIRD_PARTY_NOTICES/CONTRIBUTING/ARCHITECTURE 'planned' wording stale",
+      "core/flow_velocity/flow_solver/memory advertised but empty",
+      "test surface lacked backbone/lora_pool/measure_vram/commercial-gate-malformed/toy_train-import coverage"
     ],
     "all_addressed": true,
-    "verification": "65/65 pytest pass; license_guard 25 deps 0 RED; check_file_lengths cap 500 OK; measure_vram --dry-run gate=DRY_RUN; toy_train.py --steps 20 mean_final_ortho 0.9991 all_runs_decreased=true"
+    "verification": "85/85 pytest pass; license_guard 25 deps 0 RED with REAL parser; check_file_lengths OK; measure_vram --dry-run DRY_RUN; license_guard --list-red produces 15+ slugs incl. flow-matching, memory-layers-at-scale, hunyuanvideo, edm2"
   },
   "open_critic_remainders_from_blueprint_section_11": {
     "naming_4_axis_grep_verify": "PARTIAL (USER_ACTIONS.sh step 1)",
     "flux2_klein_4b_fp8_weight_path": "CLOSED (S0-b)",
     "vram_actual_measurement": "DEFERRED (USER_ACTIONS.sh step 4)",
-    "transfusion_pytorch_production_grade_fork_decision": "DEFERRED to S3 evidence (bridge stub localises the gap)",
+    "transfusion_pytorch_production_grade_fork_decision": "DEFERRED to S3 evidence (bridge surface localises the gap)",
     "spf_kml_naming_grep_verify_in_repos": "PARTIAL (USER_ACTIONS.sh step 1)",
-    "arxiv_id_retrieved_evidence": "PARTIAL (docs/REFERENCES.md drafted; USER_ACTIONS.sh step 6 flips to verified)"
+    "arxiv_id_retrieved_evidence": "PARTIAL (docs/REFERENCES.md drafted with checklist; USER_ACTIONS.sh step 6 flips to verified; README inline now says [unverified])"
   },
   "user_intervention_required": true,
   "user_intervention_reason": "GPU host for S3/S4; gh auth for repo + naming verify; human eyeballs for arXiv ID abstract sha; release tag; arXiv submit.",
   "user_intervention_handoff": "USER_ACTIONS.sh — every remaining manual step in one script.",
-  "notes": "After /compact, recovery = (1) Read architecture_transfusion-gibson-blueprint-2026-05-17 + project_transfusion-gibson-oss-2026-05-17 in memory, (2) Read this file, (3) Read CONTEXT.md, (4) run USER_ACTIONS.sh --plan."
+  "notes": "After /compact, recovery = (1) Read architecture_transfusion-gibson-blueprint-2026-05-17 + project_transfusion-gibson-oss-2026-05-17 in memory, (2) Read this file, (3) Read CONTEXT.md, (4) run USER_ACTIONS.sh --plan, (5) optional: read experiments/_wip/transfusion-gibson/monitor_logs/2026-05-18-*.md for prior audit verdicts."
 }

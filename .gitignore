@@ -55,3 +55,8 @@ htmlcov/
 # Generated samples
 samples/
 outputs/
+
+# Tooling-generated reports under experiments/_wip (regenerated every run)
+experiments/_wip/*/vram_report.json
+experiments/_wip/*/toy_train_report.json
+experiments/_wip/*/monitor_logs/*.tmp.md

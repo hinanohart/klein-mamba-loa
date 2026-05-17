@@ -48,3 +48,20 @@ def test_passes_when_consent_not_required():
             "blend": 0.5,
         }
     )
+
+
+def test_propagates_validation_error_for_malformed_payload():
+    """A payload missing `persona_id` is not a missing-consent issue —
+    it's a schema violation. The gate should not swallow it as a BLOCK
+    nor as a pass; the underlying PersonaURIError must surface."""
+    from klein_mamba_loa.mcp.persona_scheme import PersonaURIError
+
+    with pytest.raises(PersonaURIError):
+        assert_commercial_ready({"consent": {"real_person": True}, "blend": 0.0})
+
+
+def test_propagates_validation_error_for_non_dict_consent():
+    from klein_mamba_loa.mcp.persona_scheme import PersonaURIError
+
+    with pytest.raises(PersonaURIError):
+        assert_commercial_ready({"persona_id": "x", "consent": "not-a-dict", "blend": 0.0})

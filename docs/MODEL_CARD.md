@@ -97,6 +97,14 @@ Implementation notes:
 
 - All Stage-0 verifications are structural; the loss formulation is
   hypothesis stage.
+- `examples/toy_train.py` is a **structural** smoke test, not a
+  scientific validation. The synthetic batch sets the velocity target
+  to a row of the persona basis itself and adds the basis to the
+  optimizer, so loss decrease is mechanical: the model learns the
+  per-persona mean and the basis stays orthogonal. No claim about the
+  SPF Loss generalising follows from this scaffold. Real validation
+  is the S3 GPU-host run against forward-noised Mamba-2 + FLUX.2
+  data.
 - LoRA hot-swap (`klein_mamba_loa.persona.lora_pool`) and the
   Mamba-Transfusion bridge (`klein_mamba_loa.backbone.mamba_transfusion_bridge`)
   are surface-only stubs at this commit.
@@ -105,6 +113,13 @@ Implementation notes:
 - The orthogonality regularizer is a learning-time bias, **not** a
   cryptographic guarantee of information isolation between persona
   strata.
+- Gibson concept names in the repository (`loa`, "Persona-Geometry",
+  "stratified persona") are **inspirational labels for technical
+  primitives**, not claims of literary equivalence. A `PersonaVector`
+  is not Dixie Flatline (no persistent memory, no self-identity); a
+  LoRA hot-swap is not Loa possession in the Gibson sense. The
+  concept-to-technology mapping is many-to-many and wishful only at
+  the framing level.
 
 ## License
 
