@@ -61,7 +61,7 @@
   "kluster_status": "trial-ended; verifier protection disabled; visit https://platform.kluster.ai/ for plan",
   "git_sha_initial": "981af1a73edf355de7c8d798399e0e24b9185085",
   "git_sha_pre_audit": "9e7e438",
-  "git_sha_post_audit": "pending-commit",
+  "git_sha_post_audit": "ce9b329",
   "audit_findings_summary": {
     "critical": [
       "detach_basis_for_cond unimplemented",
