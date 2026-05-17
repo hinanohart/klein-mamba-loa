@@ -136,7 +136,7 @@ Until preprint v1 is published, cite this repository:
   title  = {klein-mamba-loa: Stratified Persona Flow for multi-persona
             multimodal generation},
   year   = {2026},
-  url    = {https://github.com/placeholder-org/klein-mamba-loa},
+  url    = {https://github.com/hinanohart/klein-mamba-loa},
   note   = {pre-alpha, hypothesis stage. Update org slug before publish.}
 }
 ```

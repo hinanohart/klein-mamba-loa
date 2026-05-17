@@ -81,9 +81,9 @@ all = [
 [project.urls]
 # These URLs are placeholders. Set the real repo location before publishing
 # (USER_ACTIONS.sh step "gh repo create" overwrites them).
-Homepage = "https://github.com/placeholder-org/klein-mamba-loa"
-Repository = "https://github.com/placeholder-org/klein-mamba-loa"
-Issues = "https://github.com/placeholder-org/klein-mamba-loa/issues"
+Homepage = "https://github.com/hinanohart/klein-mamba-loa"
+Repository = "https://github.com/hinanohart/klein-mamba-loa"
+Issues = "https://github.com/hinanohart/klein-mamba-loa/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
