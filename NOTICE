@@ -1,0 +1,17 @@
+klein-mamba-loa
+Copyright 2026 klein-mamba-loa contributors
+
+This product includes software developed by external projects (see
+THIRD_PARTY_NOTICES.md). Each such inclusion is licensed under its
+respective upstream license; no upstream license terms are modified by
+this NOTICE file or by the Apache License 2.0 governing this work.
+
+The reference research direction of this project, "Stratified Persona Flow"
+(SPF), is at hypothesis stage and is NOT a validated empirical claim.
+
+Persona-related features include a code-layer erasure endpoint
+(klein_mamba_loa/persona/erasure.py) enabled by default. Real-person
+personality cloning requires explicit subject consent. Deadbot
+(deceased-person persona) generation is NOT gated by code in this work;
+operators are responsible for jurisdictional legal review prior to any
+such deployment.

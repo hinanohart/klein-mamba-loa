@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.1.0",
+  "project": "klein-mamba-loa",
+  "started_at": "2026-05-17",
+  "current_stage": "S0",
+  "stages": {
+    "S0": {
+      "status": "IN_PROGRESS",
+      "sub_tasks": {
+        "S0-a": {
+          "name": "naming 4-axis verify",
+          "status": "GREEN",
+          "verified_at": "2026-05-17",
+          "evidence": "WebSearch x4 returned 0 collision for klein-mamba-loa (GitHub/PyPI) / klein_mamba_loa (PyPI) / PGCDisentangledFMLoss / 'Stratified Persona Flow' (arXiv title). Persona-Flow (arXiv 2602.15669) exists but is OCEAN-vector-algebra context, name SPF avoids collision."
+        },
+        "S0-b": {
+          "name": "Flux.2 klein 4B FP8 weight path",
+          "status": "GREEN",
+          "verified_at": "2026-05-17",
+          "evidence": "HuggingFace repo black-forest-labs/FLUX.2-klein-4b-fp8 exists, Apache 2.0, flux-2-klein-base-4b-fp8.safetensors (4.09 GB), VRAM ~13GB on RTX 3090/4070+, commercial use OK."
+        },
+        "S0-c": {
+          "name": "VRAM measurement stub",
+          "status": "IN_PROGRESS",
+          "started_at": "2026-05-17",
+          "notes": "scripts/measure_vram.py stub created in this turn. Actual measurement requires GPU host; user-side execution gated."
+        }
+      }
+    },
+    "S1": {"status": "PENDING_ON_S0_GREEN", "notes": "Scaffold + license guard; only starts after S0 all-GREEN"},
+    "S2": {"status": "PENDING", "notes": "Core impl SPF Loss"},
+    "S3": {"status": "PENDING", "notes": "Integration toy 3-run loss curve"},
+    "S4": {"status": "PENDING", "notes": "Small-scale eval, ECE/orthogonality metrics"},
+    "S5": {"status": "PENDING", "notes": "Docs + release prep"}
+  },
+  "last_gate": "S0-a:GREEN, S0-b:GREEN, S0-c:IN_PROGRESS",
+  "next_action": "Finish S0-c stub commit. Run kluster batch verify on Phase 2 file batch. Then transition S0 -> S1 once S0-c stub committed (structural verification only; actual GPU measurement deferred to user host).",
+  "kluster_chat_id": null,
+  "git_sha": null,
+  "monitor_agents": {
+    "monitor1": "static review of blueprint section 10 contract compliance (architect viewpoint)",
+    "monitor2": "freeze + blueprint key-facts comprehension verification (verifier viewpoint)",
+    "meta": "monitor1 + monitor2 blind-spot detection and overlap audit (critic viewpoint)"
+  },
+  "open_critic_remainders_from_blueprint_section_11": {
+    "naming_4_axis_grep_verify": "CLOSED (S0-a)",
+    "flux2_klein_4b_fp8_weight_path": "CLOSED (S0-b)",
+    "vram_actual_measurement": "OPEN (needs GPU host; stub created)",
+    "transfusion_pytorch_production_grade_fork_decision": "OPEN (S2 dependency)",
+    "spf_kml_naming_grep_verify_in_repos": "PARTIAL (web search done; gh repo search needs gh auth)"
+  },
+  "user_intervention_required": false,
+  "user_intervention_triggers_to_watch": [
+    "network egress for non-public assets",
+    "license RED detection",
+    "release tag / arXiv submission",
+    "real-person dataset",
+    "secret config (R11)",
+    "sub-R14 trigger (>500 lines OR module-crossing structural change)",
+    "Tier re-definition"
+  ],
+  "notes": "After /compact, recovery procedure = (1) Read blueprint + freeze in ~/.claude/projects/-home-runza/memory/, (2) Read this pipeline-state.json, (3) Read CONTEXT.md, (4) continue from next_action."
+}

@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# venv
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Data and weights (never commit large binary)
+*.safetensors
+*.pt
+*.bin
+*.ckpt
+data/
+checkpoints/
+weights/
+
+# Experiments (R8: keep failures; do not commit GB-scale logs)
+experiments/_wip/*/failures/**/*.log
+experiments/_wip/*/failures/**/*.json
+!experiments/_wip/*/failures/**/.gitkeep
+
+# Secrets (R11)
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pem
+id_rsa*
+*.token
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+htmlcov/
+
+# Generated samples
+samples/
+outputs/
