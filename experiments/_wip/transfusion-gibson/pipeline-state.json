@@ -73,7 +73,7 @@
   "git_sha_initial": "981af1a73edf355de7c8d798399e0e24b9185085",
   "git_sha_pre_audit": "9e7e438",
   "git_sha_post_primary_audit": "ce9b329",
-  "git_sha_post_residual_audit": "pending-commit",
+  "git_sha_post_residual_audit": "07acf0e",
   "residual_audit_findings_summary": {
     "critical": [
       "license_guard parser extracted 0 entries from real notices file (bold-only regex on plain bullets)",
