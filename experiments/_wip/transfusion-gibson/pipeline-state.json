@@ -2,19 +2,27 @@
   "schema_version": "0.1.0",
   "project": "klein-mamba-loa",
   "started_at": "2026-05-17",
-  "current_stage": "RESIDUAL_AUDIT_COMPLETE_BLOCKED_ON_GPU",
+  "current_stage": "PUBLISHED_BLOCKED_ON_GPU",
   "audit_passes": [
     {
       "performed_at": "2026-05-17",
       "name": "primary",
-      "agents": ["architect", "omc-code-reviewer", "critic"],
+      "agents": [
+        "architect",
+        "omc-code-reviewer",
+        "critic"
+      ],
       "verdict": "CONDITIONAL ACCEPT (14 findings closed in commit ce9b329)",
       "verifier_verdict": "ACCEPT"
     },
     {
       "performed_at": "2026-05-18",
       "name": "residual",
-      "agents": ["architect", "verifier", "critic"],
+      "agents": [
+        "architect",
+        "verifier",
+        "critic"
+      ],
       "verdict_per_agent": {
         "architect": "CONDITIONAL ACCEPT (7 conditions)",
         "verifier": "CONDITIONAL ACCEPT (Gibson disclaimer)",
@@ -53,7 +61,10 @@
         }
       }
     },
-    "S1": {"status": "GREEN", "completed_at": "2026-05-17"},
+    "S1": {
+      "status": "GREEN",
+      "completed_at": "2026-05-17"
+    },
     "S2": {
       "status": "GREEN_CORE",
       "completed_at": "2026-05-17",
@@ -63,8 +74,14 @@
       "status": "USER_GATE_GPU_REQUIRED",
       "notes": "Toy 3-run on Tier-1 stack. examples/toy_train.py scaffold is STRUCTURAL (synthetic targets sourced from basis itself — not scientific validation); real S3 validation needs Mamba-2 + FLUX.2 on a GPU."
     },
-    "S4": {"status": "USER_GATE_GPU_REQUIRED", "notes": "TIMETRAVEL branching ECE + orthogonality > 0.7."},
-    "S5": {"status": "GREEN_CPU_PORTION", "completed_at": "2026-05-17"}
+    "S4": {
+      "status": "USER_GATE_GPU_REQUIRED",
+      "notes": "TIMETRAVEL branching ECE + orthogonality > 0.7."
+    },
+    "S5": {
+      "status": "GREEN_CPU_PORTION",
+      "completed_at": "2026-05-17"
+    }
   },
   "last_gate": "S0:GREEN, S1:GREEN, S2:GREEN_CORE, S3:USER_GATE_GPU, S4:USER_GATE_GPU, S5:GREEN_CPU_PORTION",
   "next_action": "USER_ACTIONS.sh covers every remaining step (1-8). CLAUDE-SIDE remaining: none until new directives.",
@@ -105,5 +122,34 @@
   "user_intervention_required": true,
   "user_intervention_reason": "GPU host for S3/S4; gh auth for repo + naming verify; human eyeballs for arXiv ID abstract sha; release tag; arXiv submit.",
   "user_intervention_handoff": "USER_ACTIONS.sh — every remaining manual step in one script.",
-  "notes": "After /compact, recovery = (1) Read architecture_transfusion-gibson-blueprint-2026-05-17 + project_transfusion-gibson-oss-2026-05-17 in memory, (2) Read this file, (3) Read CONTEXT.md, (4) run USER_ACTIONS.sh --plan, (5) optional: read experiments/_wip/transfusion-gibson/monitor_logs/2026-05-18-*.md for prior audit verdicts."
+  "notes": "After /compact, recovery = (1) Read architecture_transfusion-gibson-blueprint-2026-05-17 + project_transfusion-gibson-oss-2026-05-17 in memory, (2) Read this file, (3) Read CONTEXT.md, (4) run USER_ACTIONS.sh --plan, (5) optional: read experiments/_wip/transfusion-gibson/monitor_logs/2026-05-18-*.md for prior audit verdicts.",
+  "github": {
+    "url": "https://github.com/hinanohart/klein-mamba-loa",
+    "owner": "hinanohart",
+    "visibility": "public",
+    "default_branch": "master",
+    "license": "Apache-2.0",
+    "branch_protection": {
+      "applied": true,
+      "required_status_checks": [
+        "lint-and-test (3.10)",
+        "lint-and-test (3.11)",
+        "lint-and-test (3.12)",
+        "torch-tests",
+        "vram-stub-dry-run"
+      ],
+      "strict": true,
+      "pr_required": true,
+      "force_pushes": false,
+      "deletions": false,
+      "conversation_resolution": true
+    },
+    "open_prs": 0,
+    "open_issues": 0,
+    "first_ci_run": {
+      "id": 25998219784,
+      "conclusion": "success"
+    }
+  },
+  "git_sha_post_publish": "16459a3"
 }
