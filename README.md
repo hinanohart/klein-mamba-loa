@@ -2,7 +2,7 @@
 
 **Stratified Persona Flow (SPF): disentangled velocity fields for multi-persona multimodal generation.**
 
-License: Apache-2.0. Status: pre-alpha (S0/S1 scaffold + S2 SPF Loss core + S5 release-prep docs; S3/S4 user-gated on GPU).
+License: MIT. Status: pre-alpha (S0/S1 scaffold + S2 SPF Loss core + S5 release-prep docs; S3/S4 user-gated on GPU).
 
 ## Research direction (hypothesis stage)
 
@@ -45,7 +45,7 @@ returns `gate=DRY_RUN` (structural verification only).
 | Stage | Status | Notes |
 |---|---|---|
 | S0-a (naming 4-axis) | GREEN | WebSearch verified |
-| S0-b (FLUX.2 klein 4B FP8 weight path) | GREEN | Apache-2.0 confirmed |
+| S0-b (FLUX.2 klein 4B FP8 weight path) | GREEN | MIT confirmed |
 | S0-c (VRAM measurement) | DEFERRED to GPU host | dry-run returns `DRY_RUN`; real measurement is a user gate |
 | S1 (scaffold + license guard) | GREEN | `THIRD_PARTY_NOTICES.md` + `scripts/license_guard.py` |
 | S2 (SPF Loss core) | GREEN (CPU) | `klein_mamba_loa/flow/loss/pgc_dfm.py`, unit tests pass on no-torch host |
