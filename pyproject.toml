@@ -7,7 +7,7 @@ name = "klein-mamba-loa"
 version = "0.0.1.dev0"
 description = "Stratified Persona Flow (SPF): disentangled velocity fields for multi-persona multimodal generation. Transfusion x Flow Matching x Mamba-2 x FLUX.2 klein stack."
 authors = [{name = "klein-mamba-loa maintainers"}]
-license = {text = "Apache-2.0"}
+license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = [
