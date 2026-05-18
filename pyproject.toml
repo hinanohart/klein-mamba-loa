@@ -21,7 +21,7 @@ keywords = [
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
