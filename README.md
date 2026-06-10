@@ -8,24 +8,6 @@ License: MIT. Status: pre-alpha (`0.0.1.dev0`).
 
 ---
 
-## Architecture
-
-```mermaid
-flowchart TD
-    MCP[MCP persona URI<br>consent and blend] --> PG[Persona Geometry<br>orthogonal basis P1..Pn]
-    PG --> LP[LoRA Pool<br>hot-swap and blend]
-    LP --> BRIDGE[Mamba Transfusion Bridge]
-    MAMBA[Mamba-2 1.3B<br>text backbone] --> BRIDGE
-    BRIDGE --> VF[Velocity Field<br>flow/velocity]
-    BRIDGE --> DIFF[Diffusion Head<br>FLUX.2 klein 4B FP8]
-    VF --> LOSS[SPF Loss PGC-DFM<br>L_fm + L_ortho + L_cond]
-    DIFF --> LOSS
-    LOSS --> GATE[Runtime Gate<br>GREEN / YELLOW / RED]
-    GATE --> SERVE[Serving Layer<br>commercial consent gate]
-```
-
----
-
 ## What is this?
 
 `klein-mamba-loa` explores a single hypothesis: multiple distinct "personas" can share one backbone and one velocity field if their condition vectors are kept **orthogonal** in the latent space. The project's full name references:
@@ -43,6 +25,24 @@ L = E_t[ || v_pred - v_target ||² ]                        # flow-matching term
 ```
 
 **This is not a validated result.** No empirical claims are made until S3 (3-run loss-curve study) and S4 (small-scale eval).
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    MCP[MCP persona URI<br>consent and blend] --> PG[Persona Geometry<br>orthogonal basis P1..Pn]
+    PG --> LP[LoRA Pool<br>hot-swap and blend]
+    LP --> BRIDGE[Mamba Transfusion Bridge]
+    MAMBA[Mamba-2 1.3B<br>text backbone] --> BRIDGE
+    BRIDGE --> VF[Velocity Field<br>flow/velocity]
+    BRIDGE --> DIFF[Diffusion Head<br>FLUX.2 klein 4B FP8]
+    VF --> LOSS[SPF Loss PGC-DFM<br>L_fm + L_ortho + L_cond]
+    DIFF --> LOSS
+    LOSS --> GATE[Runtime Gate<br>GREEN / YELLOW / RED]
+    GATE --> SERVE[Serving Layer<br>commercial consent gate]
+```
 
 ---
 
