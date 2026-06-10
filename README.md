@@ -12,16 +12,16 @@ License: MIT. Status: pre-alpha (`0.0.1.dev0`).
 
 ```mermaid
 flowchart TD
-    MCP[MCP persona URI\nconsent and blend] --> PG[Persona Geometry\northogonal basis P1..Pn]
-    PG --> LP[LoRA Pool\nhot-swap and blend]
+    MCP[MCP persona URI<br>consent and blend] --> PG[Persona Geometry<br>orthogonal basis P1..Pn]
+    PG --> LP[LoRA Pool<br>hot-swap and blend]
     LP --> BRIDGE[Mamba Transfusion Bridge]
-    MAMBA[Mamba-2 1.3B\ntext backbone] --> BRIDGE
-    BRIDGE --> VF[Velocity Field\nflow/velocity]
-    BRIDGE --> DIFF[Diffusion Head\nFLUX.2 klein 4B FP8]
-    VF --> LOSS[SPF Loss PGC-DFM\nL_fm + L_ortho + L_cond]
+    MAMBA[Mamba-2 1.3B<br>text backbone] --> BRIDGE
+    BRIDGE --> VF[Velocity Field<br>flow/velocity]
+    BRIDGE --> DIFF[Diffusion Head<br>FLUX.2 klein 4B FP8]
+    VF --> LOSS[SPF Loss PGC-DFM<br>L_fm + L_ortho + L_cond]
     DIFF --> LOSS
-    LOSS --> GATE[Runtime Gate\nGREEN / YELLOW / RED]
-    GATE --> SERVE[Serving Layer\ncommercial consent gate]
+    LOSS --> GATE[Runtime Gate<br>GREEN / YELLOW / RED]
+    GATE --> SERVE[Serving Layer<br>commercial consent gate]
 ```
 
 ---
