@@ -124,6 +124,8 @@ experiments/_wip/transfusion-gibson/
   pipeline-state.json    # current stage + gates
   CONTEXT.md             # narrative log
   TODO_NEXT.md           # top-3 next actions
+  monitor_logs/          # audit-agent outputs (append-only)
+  failures/              # R8 permanent failure parking
 examples/
   toy_train.py           # S3 training scaffold (CPU-importable, GPU runnable)
 tests/
@@ -142,7 +144,7 @@ USER_ACTIONS.sh          # all remaining manual steps in one script
 | S1 (scaffold + license guard) | GREEN | `THIRD_PARTY_NOTICES.md` + `scripts/license_guard.py` |
 | S2 (SPF Loss core) | GREEN (CPU) | `flow/loss/pgc_dfm.py`, unit tests pass |
 | S3 (toy 3-run training) | USER GATE (GPU) | `examples/toy_train.py` scaffold ready |
-| S4 (small-scale eval) | USER GATE (GPU) | depends on S3 |
+| S4 (small-scale eval) | USER GATE (GPU) | depends on S3; TIMETRAVEL branching probability + orthogonality metric |
 | S5 (docs + release prep) | GREEN (CPU portion) | release tag is a user gate |
 
 Live state: `experiments/_wip/transfusion-gibson/pipeline-state.json`.
