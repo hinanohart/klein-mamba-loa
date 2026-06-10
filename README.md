@@ -77,10 +77,10 @@ python examples/toy_train.py
 
 | Tier | VRAM | Capabilities | Constraint |
 |------|------|--------------|-----------|
-| 0.5 | 16 GB | Inference only | Mamba-2 780M + FLUX.2 klein 4B FP8; no training; no Janus |
+| 0.5 | 16 GB | Inference only | Mamba-2 1.3B + FLUX.2 klein 4B FP8; no training; no Janus |
 | 1 | 24 GB | Inference + LoRA training | Mamba-2 1.3B + FLUX.2 klein 4B FP8; Mamba and Janus mutually exclusive |
-| 1.5 | 48 GB | Mamba + Janus simultaneous | Adds Janus-Pro 1.5B + OpenVLA 7B + TRELLIS.2 4B |
-| 2 | 80 GB+ | Full fine-tune | DeepSeek-V3, Mochi-1 full, Wan 2.2 BF16 |
+| 1.5 | 48 GB | Mamba + Janus simultaneous | Janus-Pro 1.5B co-resident with Mamba-2 1.3B |
+| 2 | 80 GB+ | Full fine-tune | Planned; no wrappers implemented yet |
 
 VRAM figures are estimates. Run `python scripts/measure_vram.py --tier <N>` on a GPU host for real measurements.
 
