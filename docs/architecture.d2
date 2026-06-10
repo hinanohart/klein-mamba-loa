@@ -1,0 +1,43 @@
+direction: down
+explanation: |md
+  ### klein-mamba-loa
+  **Stratified Persona Flow (SPF)** — disentangled velocity fields for multi-persona multimodal generation keeping persona directions orthogonal.
+| {near: top-center}
+
+mcp: "① MCP persona URI\nconsent and blend" {shape: oval; style: {fill: "#6366f1"; font-color: "#ffffff"; stroke: "#4338ca"; bold: true; font-size: 18}}
+
+persona: "Persona Layer" {
+  style: {fill: "#f0fdf4"; stroke: "#10b981"; font-color: "#065f46"; bold: true; font-size: 16}
+  pg: "Persona Geometry\northogonal basis P1..Pn"; lp: "LoRA Pool\nhot-swap and blend"
+  *.style.fill: "#dcfce7"; *.style.font-color: "#065f46"
+}
+
+backbones: "③ Backbones" {
+  style: {fill: "#fffbeb"; stroke: "#f59e0b"; font-color: "#92400e"; bold: true; font-size: 16}
+  mamba: "Mamba-2 1.3B\ntext backbone"; diff: "Diffusion Head\nFLUX.2 klein 4B FP8"
+  *.style.fill: "#fef3c7"; *.style.font-color: "#92400e"
+}
+
+bridge: "② Mamba Transfusion Bridge" {style: {fill: "#0ea5e9"; font-color: "#ffffff"; stroke: "#0369a1"; bold: true; font-size: 18}}
+vf: "Velocity Field\nflow/velocity" {style: {fill: "#dcfce7"; font-color: "#065f46"; stroke: "#10b981"; bold: true}}
+loss: "④ SPF Loss PGC-DFM\nL_fm + L_ortho + L_cond" {style: {fill: "#0ea5e9"; font-color: "#ffffff"; stroke: "#0369a1"; bold: true; font-size: 18}}
+gate: "⑤ Runtime Gate\nGREEN / YELLOW / RED" {style: {fill: "#0ea5e9"; font-color: "#ffffff"; stroke: "#0369a1"; bold: true; font-size: 18}}
+serve: "⑥ Serving Layer\ncommercial consent gate" {shape: oval; style: {fill: "#6366f1"; font-color: "#ffffff"; stroke: "#4338ca"; bold: true; font-size: 18}}
+
+mcp -> persona.pg: "② build basis"
+persona.pg -> persona.lp: "blend"
+persona.lp -> bridge: "② route"
+backbones.mamba -> bridge: "③ feed"
+bridge -> vf: "flow"
+bridge -> backbones.diff: "③ condition"
+vf -> loss: "④ L_fm"
+backbones.diff -> loss: "④ L_cond"
+loss -> gate: "⑤ evaluate"
+gate -> serve: "⑥ serve"
+
+legend: "Legend" {
+  near: bottom-center
+  style: {fill: "#f8fafc"; stroke: "#cbd5e1"; font-size: 13}
+  e: "● entry/gate"; c: "● core bridge"; p: "● processing"; b: "● backbone/model"; d: "● output"
+  e.style.font-color: "#4338ca"; c.style.font-color: "#0369a1"; p.style.font-color: "#10b981"; b.style.font-color: "#f59e0b"; d.style.font-color: "#ec4899"
+}

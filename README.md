@@ -30,19 +30,9 @@ L = E_t[ || v_pred - v_target ||² ]                        # flow-matching term
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    MCP[MCP persona URI<br>consent and blend] --> PG[Persona Geometry<br>orthogonal basis P1..Pn]
-    PG --> LP[LoRA Pool<br>hot-swap and blend]
-    LP --> BRIDGE[Mamba Transfusion Bridge]
-    MAMBA[Mamba-2 1.3B<br>text backbone] --> BRIDGE
-    BRIDGE --> VF[Velocity Field<br>flow/velocity]
-    BRIDGE --> DIFF[Diffusion Head<br>FLUX.2 klein 4B FP8]
-    VF --> LOSS[SPF Loss PGC-DFM<br>L_fm + L_ortho + L_cond]
-    DIFF --> LOSS
-    LOSS --> GATE[Runtime Gate<br>GREEN / YELLOW / RED]
-    GATE --> SERVE[Serving Layer<br>commercial consent gate]
-```
+<div align="center">
+  <img src="docs/architecture.png" alt="klein-mamba-loa architecture" width="840">
+</div>
 
 ---
 
@@ -189,3 +179,4 @@ The repository name (`loa`) and several internal labels — "Persona-Geometry", 
 ## Contributing
 
 Pre-alpha. Issues and discussions only; PR queue opens at S2 milestone. Read `CONTRIBUTING.md` for the anti-checklist (no RED-license deps, no empirical claim before S3, no erasure removal).
+
